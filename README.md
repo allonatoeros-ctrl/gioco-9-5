@@ -30,3 +30,7 @@ npm run avvia
 ```
 
 Poi apri l'indirizzo che compare (di solito http://localhost:5173). Si sceglie il numero di giocatori e i nomi, e si gioca tutti sullo stesso schermo: i pulsanti in basso mostrano solo le mosse permesse. Le carte coperte si vedono come dorso blu. Per vincere un segnalino si clicca una propria carta scoperta.
+
+## Pagina unica senza installazione
+
+`npm run pagina-unica` crea `dist/gioco-singolo.html`: un solo file con dentro tutto il gioco, che si apre con un doppio clic o si pubblica così com'è.

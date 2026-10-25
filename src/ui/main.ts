@@ -22,6 +22,7 @@ let stato: Stato | null = null;
 let caso: Caso = casoReale();
 let registroVisto = 0;
 let errore = '';
+let chiediNuova = false;
 
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -71,6 +72,7 @@ function mostraImpostazioni() {
   numero.onchange = aggiorna;
   aggiorna();
 
+  const messaggioErrore = el('div', 'errore');
   const via = el('button', 'primario', 'Inizia la partita');
   via.onclick = () => {
     const n = Number(numero.value);
@@ -78,7 +80,7 @@ function mostraImpostazioni() {
       (inp, i) => inp.value.trim() || `Giocatore ${i + 1}`,
     );
     if (new Set(nomiScelti).size !== nomiScelti.length) {
-      alert('I nomi devono essere diversi tra loro.');
+      messaggioErrore.textContent = 'I nomi devono essere diversi tra loro.';
       return;
     }
     caso = casoReale();
@@ -89,9 +91,10 @@ function mostraImpostazioni() {
     });
     registroVisto = 0;
     errore = '';
+    chiediNuova = false;
     disegna();
   };
-  box.append(campoNumero, nomi, campoObiettivo, via);
+  box.append(campoNumero, nomi, campoObiettivo, messaggioErrore, via);
   app.append(box);
 }
 
@@ -145,9 +148,15 @@ function disegna() {
     el('strong', undefined, `Mano ${s.numeroMano}${s.ultimaMano ? ' – ultima mano' : ''}${s.manoSpareggio ? ' – spareggio' : ''}`),
     el('span', undefined, `${info} · Mazzo: ${s.mazzo.length} carte · Scarti: ${s.scarti.length}`),
   );
-  const nuova = el('button', undefined, 'Nuova partita');
+  const nuova = el('button', undefined, chiediNuova ? 'Sicuro? Si perde la partita' : 'Nuova partita');
   nuova.onclick = () => {
-    if (confirm('Vuoi davvero lasciare questa partita?')) mostraImpostazioni();
+    if (chiediNuova) {
+      chiediNuova = false;
+      mostraImpostazioni();
+    } else {
+      chiediNuova = true;
+      disegna();
+    }
   };
   barra.append(nuova);
   tavolo.append(barra);
@@ -272,6 +281,7 @@ function disegnaAzioni(s: Stato, permesse: ReturnType<typeof azioniPermesse>) {
 }
 
 function esegui(azione: Azione) {
+  chiediNuova = false;
   try {
     stato = applicaAzione(stato!, azione, caso);
     errore = '';
