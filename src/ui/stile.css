@@ -45,6 +45,8 @@ button.avviso { background: var(--acc); color: var(--su-acc); border-color: var(
 .carte { display: flex; flex-wrap: wrap; gap: .4rem; min-height: 84px; }
 .carta { width: 56px; height: 80px; border-radius: 8px; border: 1px solid var(--bordo); background: var(--carta); color: #1d1d1b; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: 700; font-size: 1.1rem; padding: 2px; }
 .carta.speciale { font-size: .7rem; background: var(--carta-sp); }
+.carta.illustrata { padding: 0; border: none; background: none; overflow: hidden; }
+.carta.illustrata img { width: 100%; height: 100%; display: block; }
 .carta.coperta { background: repeating-linear-gradient(45deg, var(--dorso1), var(--dorso1) 6px, var(--dorso2) 6px, var(--dorso2) 12px); color: transparent; }
 .carta.scegli { outline: 3px solid var(--acc); cursor: pointer; }
 .segn { display: inline-block; background: gold; color: #1d1d1b; border-radius: 50%; width: 22px; height: 22px; text-align: center; line-height: 22px; font-size: .75rem; margin-right: 2px; }

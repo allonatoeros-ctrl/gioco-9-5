@@ -16,6 +16,7 @@ import {
   Caso,
   Carta,
 } from '../engine';
+import { illustrazioneNumero } from './illustrazioni';
 
 const app = document.getElementById('app')!;
 let stato: Stato | null = null;
@@ -113,7 +114,16 @@ function disegnaCarta(carta: Carta, scoperta: boolean, scegli?: () => void) {
     c.title = 'Carta coperta';
     c.textContent = '?';
   } else {
-    c.textContent = nomeCarta(carta);
+    const disegno = eNumerica(carta) ? illustrazioneNumero(carta.valore) : undefined;
+    if (disegno) {
+      c.classList.add('illustrata');
+      const img = el('img');
+      img.src = disegno;
+      img.alt = nomeCarta(carta);
+      c.append(img);
+    } else {
+      c.textContent = nomeCarta(carta);
+    }
     if (!eNumerica(carta)) c.classList.add('speciale');
   }
   if (scegli) {
