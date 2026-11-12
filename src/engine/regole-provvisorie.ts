@@ -34,3 +34,21 @@ export function p3_valoreDaTogliere(carta: CartaInGioco): number {
   if (carta.carta.tipo !== 'numero' || !carta.scoperta) return 0;
   return carta.carta.valore * carta.fattore;
 }
+
+/**
+ * P4 – Spione rivelato o pescato: il regolamento dice che il giocatore "può" metterlo da parte.
+ * Proposta: va sempre nella riserva, come il Tagliatette (tenerlo in gioco non serve a nulla).
+ */
+export function p4_spioneSempreInRiserva(): boolean {
+  return true;
+}
+
+/**
+ * P5 – Quando si può usare lo Spione.
+ * Il regolamento dice: per guardare la carta da girare o pescare "prima di decidere se farlo o fermarsi".
+ * Proposta: solo quando il giocatore ha davvero questa scelta, cioè dopo aver girato la prima carta
+ * e non durante le pescate obbligatorie di +1/+2 (lì non può fermarsi).
+ */
+export function p5_spioneUsabile(situazione: { deveRivelare: boolean; pescateObbligatorieInCorso: boolean }): boolean {
+  return !situazione.deveRivelare && !situazione.pescateObbligatorieInCorso;
+}

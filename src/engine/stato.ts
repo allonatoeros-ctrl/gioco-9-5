@@ -24,7 +24,7 @@ export type EsitoTurno = 'nonPartecipa' | 'daGiocare' | 'inTurno' | 'fermo' | 's
 export interface Giocatore {
   nome: string;
   inGioco: CartaInGioco[];
-  /** Tagliatette tenuti da parte; restano anche nelle mani successive. */
+  /** Carte potere tenute da parte (Tagliatette, Spione); restano anche nelle mani successive. */
   riserva: Carta[];
   segnalini: Segnalino[];
   /** Usata solo dalla regola provvisoria P3 se l'autore cambierà la proposta; normalmente 0. */
@@ -46,6 +46,12 @@ export interface Turno {
   deveRivelare: boolean;
   dopoGiocoliere: boolean;
   contatore: number;
+  /**
+   * Carta vista di nascosto con lo Spione: la prossima carta da rivelare (coperta davanti al
+   * giocatore) o da pescare (in cima al mazzo). La vede solo il giocatore di turno; sparisce
+   * appena il giocatore fa la mossa successiva.
+   */
+  sbirciata: { carta: Carta; da: 'coperta' | 'mazzo' } | null;
 }
 
 export type Fase = 'turno' | 'decisioneSballo' | 'moneta' | 'segnalino' | 'finita';
@@ -85,6 +91,7 @@ export type Azione =
   | { tipo: 'fermati'; giocatore: number }
   | { tipo: 'usaTagliatette'; giocatore: number }
   | { tipo: 'rinunciaTagliatette'; giocatore: number }
+  | { tipo: 'usaSpione'; giocatore: number }
   | { tipo: 'scegliMoneta'; giocatore: number; scelta: Moneta }
   | { tipo: 'scegliSegnalino'; giocatore: number; cartaId: number | null };
 

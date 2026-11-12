@@ -7,6 +7,8 @@ import {
   p1_sostituzioneAncheConStopAttivo,
   p2_qualeCopertaSostituireDopoGiocoliere,
   p3_valoreDaTogliere,
+  p4_spioneSempreInRiserva,
+  p5_spioneUsabile,
 } from './regole-provvisorie';
 import {
   Azione,
@@ -74,6 +76,10 @@ function haTagliatette(g: Giocatore): boolean {
   return g.riserva.some((c) => c.tipo === 'tagliatette');
 }
 
+function haSpione(g: Giocatore): boolean {
+  return g.riserva.some((c) => c.tipo === 'spione');
+}
+
 function carteDisponibili(stato: Stato): number {
   return stato.mazzo.length + stato.scarti.length;
 }
@@ -97,10 +103,22 @@ export function azioniPermesse(stato: Stato): AzionePermessa[] {
         azioni.push({ tipo: 'pesca', giocatore: t.giocatore, obbligatoria: true });
       } else {
         if (coperte > 0) azioni.push({ tipo: 'rivela', giocatore: t.giocatore });
-        if (coperte === 0 && !stopAttivo(stato, t.giocatore) && carteDisponibili(stato) > 0) {
+        const puoPescare = coperte === 0 && !stopAttivo(stato, t.giocatore) && carteDisponibili(stato) > 0;
+        if (puoPescare) {
           azioni.push({ tipo: 'pesca', giocatore: t.giocatore, obbligatoria: false });
         }
         if (!t.deveRivelare) azioni.push({ tipo: 'fermati', giocatore: t.giocatore });
+        // Spione (sezione 5.6): si usa per guardare la carta da girare o da pescare
+        // "prima di decidere se farlo o fermarsi" (regola provvisoria P5).
+        // Qui siamo già fuori dalle pescate obbligatorie (coda vuota).
+        if (
+          haSpione(g) &&
+          t.sbirciata === null &&
+          (coperte > 0 || puoPescare) &&
+          p5_spioneUsabile({ deveRivelare: t.deveRivelare, pescateObbligatorieInCorso: false })
+        ) {
+          azioni.push({ tipo: 'usaSpione', giocatore: t.giocatore });
+        }
       }
       if (haTagliatette(g)) azioni.push({ tipo: 'usaTagliatette', giocatore: t.giocatore });
       break;
@@ -193,6 +211,10 @@ export function applicaAzione(stato: Stato, azione: Azione, caso: Caso): Stato {
   const s: Stato = structuredClone(stato);
   const gi = azione.giocatore;
   const g = s.giocatori[gi];
+  // Quello che si è visto con lo Spione vale solo fino alla mossa successiva.
+  if (s.turno && (azione.tipo === 'rivela' || azione.tipo === 'pesca' || azione.tipo === 'fermati')) {
+    s.turno.sbirciata = null;
+  }
 
   switch (azione.tipo) {
     case 'rivela': {
@@ -232,6 +254,28 @@ export function applicaAzione(stato: Stato, azione: Azione, caso: Caso): Stato {
         gi,
       );
       dopoAzione(s, caso);
+      break;
+    }
+    case 'usaSpione': {
+      const t = s.turno!;
+      const coperta = g.inGioco.find((c) => !c.scoperta);
+      if (coperta) {
+        t.sbirciata = { carta: coperta.carta, da: 'coperta' };
+      } else {
+        if (s.mazzo.length === 0) rimescolaScarti(s, caso);
+        t.sbirciata = { carta: s.mazzo[0], da: 'mazzo' };
+      }
+      const i = g.riserva.findIndex((c) => c.tipo === 'spione');
+      s.scarti.push(g.riserva.splice(i, 1)[0]);
+      // Il registro è visibile a tutti: non dice quale carta ha visto.
+      registra(
+        s,
+        'spione',
+        `${g.nome} usa lo Spione e guarda di nascosto ${
+          coperta ? 'la sua prossima carta coperta' : 'la prima carta del mazzo'
+        }. Lo Spione va negli scarti.`,
+        gi,
+      );
       break;
     }
     case 'rinunciaTagliatette':
@@ -299,7 +343,7 @@ function iniziaMano(s: Stato, caso: Caso, partecipanti: number[]) {
 function iniziaTurno(s: Stato, caso: Caso, gi: number) {
   const g = s.giocatori[gi];
   s.fase = 'turno';
-  s.turno = { giocatore: gi, coda: [], rivelazioniNelGruppo: 0, deveRivelare: true, dopoGiocoliere: false, contatore: 0 };
+  s.turno = { giocatore: gi, coda: [], rivelazioniNelGruppo: 0, deveRivelare: true, dopoGiocoliere: false, contatore: 0, sbirciata: null };
   g.esito = 'inTurno';
   for (let k = 0; k < 2; k++) {
     const carta = pescaDalMazzo(s, caso);
@@ -395,6 +439,12 @@ function rivelaCarta(s: Stato, caso: Caso, cig: CartaInGioco, modo: ModoRivelazi
       g.riserva.push(carta);
       registra(s, 'riserva', `Il Tagliatette va nella riserva di ${g.nome}.`, gi);
       break;
+    case 'spione':
+      if (!p4_spioneSempreInRiserva()) break; // resterebbe in gioco come carta speciale
+      g.inGioco.splice(g.inGioco.indexOf(cig), 1);
+      g.riserva.push(carta);
+      registra(s, 'riserva', `Lo Spione va nella riserva di ${g.nome}.`, gi);
+      break;
     case 'cambioTetta':
       applicaCambioTetta(s, caso, cig, primaDelGruppo);
       break;
@@ -470,7 +520,7 @@ function applicaGiocoliere(s: Stato, caso: Caso, giocoliere: CartaInGioco) {
   const t = s.turno!;
   const gi = t.giocatore;
   const g = s.giocatori[gi];
-  // Le carte in gioco, scoperte e coperte, Giocoliere incluso (i Tagliatette in riserva no).
+  // Le carte in gioco, scoperte e coperte, Giocoliere incluso (Tagliatette e Spione in riserva no).
   const quante = g.inGioco.length;
   const altre = g.inGioco.filter((c) => c !== giocoliere).map((c) => c.carta);
   g.inGioco = [];

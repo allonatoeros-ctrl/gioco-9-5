@@ -3,11 +3,13 @@ import { regoleProvvisorie } from '../src/engine';
 import { Partita } from './aiuti';
 
 describe('Parte 6 – Regole provvisorie (tutte in regole-provvisorie.ts)', () => {
-  it('le tre regole stanno in un solo file con nomi chiari', () => {
+  it('le regole provvisorie stanno in un solo file con nomi chiari', () => {
     expect(Object.keys(regoleProvvisorie).sort()).toEqual([
       'p1_sostituzioneAncheConStopAttivo',
       'p2_qualeCopertaSostituireDopoGiocoliere',
       'p3_valoreDaTogliere',
+      'p4_spioneSempreInRiserva',
+      'p5_spioneUsabile',
     ]);
   });
 

@@ -16,7 +16,7 @@ Alla fine deve comparire `Tests  114 passed (114)` e nessuna riga rossa.
 ## Dove sono le cose
 
 - `src/engine/` – il motore delle regole
-  - `carte.ts` – le 115 carte
+  - `carte.ts` – le 116 carte
   - `caso.ts` – mescolamento, primo giocatore e moneta (sostituibile nei test)
   - `stato.ts` – com'è fatta la "fotografia" della partita
   - `motore.ts` – azioni permesse, effetti delle carte, fine mano e fine partita

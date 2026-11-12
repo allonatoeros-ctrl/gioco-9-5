@@ -136,6 +136,14 @@ function descrizioneStato(s: Stato, i: number): string {
   return fase + punti;
 }
 
+/** Es. " · Riserva: 2 Tagliatette, 1 Spione" (vuoto se la riserva è vuota). */
+function descrizioneRiserva(riserva: Carta[]): string {
+  if (riserva.length === 0) return '';
+  const conta = new Map<string, number>();
+  for (const c of riserva) conta.set(nomeCarta(c), (conta.get(nomeCarta(c)) ?? 0) + 1);
+  return ' · Riserva: ' + [...conta].map(([nome, n]) => `${n} ${nome}`).join(', ');
+}
+
 function disegna() {
   const s = stato!;
   app.replaceChildren();
@@ -189,8 +197,7 @@ function disegna() {
     box.append(carte);
 
     const riga = el('div', 'stato');
-    const tt = g.riserva.length > 0 ? ` · Riserva: ${g.riserva.length} Tagliatette` : '';
-    riga.textContent = descrizioneStato(s, i) + tt;
+    riga.textContent = descrizioneStato(s, i) + descrizioneRiserva(g.riserva);
     box.append(riga);
     giocatori.append(box);
   });
@@ -226,6 +233,11 @@ function disegnaAzioni(s: Stato, permesse: ReturnType<typeof azioniPermesse>) {
   const msg = el('div', 'msg');
   box.append(msg);
   if (errore) box.append(el('div', 'msg', `⚠ ${errore}`));
+  const sb = s.turno?.sbirciata;
+  if (sb) {
+    const dove = sb.da === 'coperta' ? 'la tua prossima carta coperta' : 'la prima carta del mazzo';
+    box.append(el('div', 'msg sbirciata', `👁 Solo per ${nome(s.turno!.giocatore)}: ${dove} è ${nomeCarta(sb.carta)}`));
+  }
 
   const bottone = (testo: string, classe: string, azione: Azione) => {
     const b = el('button', classe, testo);
@@ -258,6 +270,9 @@ function disegnaAzioni(s: Stato, permesse: ReturnType<typeof azioniPermesse>) {
         } else {
           bottone('Usa il Tagliatette', 'avviso', { tipo: 'usaTagliatette', giocatore: g });
         }
+        break;
+      case 'usaSpione':
+        bottone('Usa lo Spione', 'avviso', { tipo: 'usaSpione', giocatore: g });
         break;
       case 'rinunciaTagliatette':
         bottone('No, resto sballato', '', { tipo: 'rinunciaTagliatette', giocatore: g });
