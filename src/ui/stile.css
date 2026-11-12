@@ -54,3 +54,5 @@ button.avviso { background: var(--acc); color: var(--su-acc); border-color: var(
 .registro p { margin: .2rem 0; padding-bottom: .2rem; border-bottom: 1px dotted var(--bordo-p); }
 .registro p.nuova { font-weight: 700; background: var(--nuova); }
 .fine { text-align: center; font-size: 1.3rem; }
+
+.msg.sbirciata { font-weight: 700; }

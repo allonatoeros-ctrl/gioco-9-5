@@ -6,7 +6,8 @@ export type TipoSpeciale =
   | 'cambioTetta'
   | 'stop'
   | 'giocoliere'
-  | 'tagliatette';
+  | 'tagliatette'
+  | 'spione';
 
 export type Carta =
   | { id: number; tipo: 'numero'; valore: number }
@@ -27,9 +28,10 @@ export const COMPOSIZIONE_MAZZO: ReadonlyArray<{ nome: string; quantita: number;
   { nome: 'Stop', quantita: 8, crea: () => ({ tipo: 'stop' }) },
   { nome: 'Giocoliere', quantita: 1, crea: () => ({ tipo: 'giocoliere' }) },
   { nome: 'Tagliatette', quantita: 2, crea: () => ({ tipo: 'tagliatette' }) },
+  { nome: 'Spione', quantita: 1, crea: () => ({ tipo: 'spione' }) },
 ];
 
-/** Crea le 115 carte, in ordine fisso (prima di qualsiasi mescolamento). */
+/** Crea le 116 carte, in ordine fisso (prima di qualsiasi mescolamento). */
 export function creaMazzo(): Carta[] {
   const carte: Carta[] = [];
   let id = 1;
@@ -48,6 +50,7 @@ const NOMI_SPECIALI: Record<TipoSpeciale, string> = {
   stop: 'Stop',
   giocoliere: 'Giocoliere',
   tagliatette: 'Tagliatette',
+  spione: 'Spione',
 };
 
 /** Nome leggibile di una carta, es. "7", "0,5", "Stop". */
@@ -62,7 +65,7 @@ export function eNumerica(carta: Carta): carta is Extract<Carta, { tipo: 'numero
 
 /**
  * Controlla se una carta corrisponde a un nome breve, usato nei test e nel caso finto:
- * "0", "0,5" (o "0.5" o "Mezzo"), "1"…"9", "+1", "+2", "CT", "Stop", "Giocoliere", "TT".
+ * "0", "0,5" (o "0.5" o "Mezzo"), "1"…"9", "+1", "+2", "CT", "Stop", "Giocoliere", "TT", "Spione".
  */
 export function corrispondeANome(carta: Carta, nome: string): boolean {
   const n = nome.trim().toLowerCase();
@@ -78,6 +81,7 @@ export function corrispondeANome(carta: Carta, nome: string): boolean {
     stop: ['stop', 'suora'],
     giocoliere: ['giocoliere'],
     tagliatette: ['tt', 'tagliatette'],
+    spione: ['spione', 'sp'],
   };
   return alias[carta.tipo].includes(n);
 }

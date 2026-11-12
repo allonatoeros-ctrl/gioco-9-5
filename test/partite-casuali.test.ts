@@ -1,5 +1,5 @@
 // Prova di resistenza: tante partite complete con carte e scelte casuali.
-// Controlla che il motore non si blocchi mai, che le 115 carte ci siano sempre tutte
+// Controlla che il motore non si blocchi mai, che le 116 carte ci siano sempre tutte
 // e che ogni partita finisca con un vincitore.
 import { describe, expect, it } from 'vitest';
 import { Azione, applicaAzione, azioniPermesse, casoReale, creaPartita, punteggio } from '../src/engine';

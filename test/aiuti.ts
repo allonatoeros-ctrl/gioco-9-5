@@ -91,6 +91,20 @@ export class Partita {
     this.s.giocatori[g].riserva.push(...this.s.mazzo.splice(i, 1));
     return this;
   }
+  usaSpione() {
+    return this.fai('usaSpione');
+  }
+  /** Prepara la riserva: sposta lo Spione dal mazzo alla riserva del giocatore. */
+  dammiSpione(g = 0) {
+    const i = this.s.mazzo.findIndex((c) => c.tipo === 'spione');
+    this.s.giocatori[g].riserva.push(...this.s.mazzo.splice(i, 1));
+    return this;
+  }
+  /** La carta vista con lo Spione, es. "4" (null se non ha guardato nulla). */
+  sbirciata(): string | null {
+    const sb = this.s.turno?.sbirciata;
+    return sb ? nomeCarta(sb.carta) : null;
+  }
   /** Testi del registro eventi. */
   registro(): string[] {
     return this.s.registro.map((e) => e.testo);
@@ -101,7 +115,7 @@ export class Partita {
   }
 }
 
-/** Controllo di base: le 115 carte ci sono sempre tutte, da qualche parte. */
+/** Controllo di base: le 116 carte ci sono sempre tutte, da qualche parte. */
 export function controllaCarte(s: Stato) {
   const ids = [
     ...s.mazzo,
@@ -112,6 +126,6 @@ export function controllaCarte(s: Stato) {
       ...g.segnalini.flatMap((x) => (x.carta ? [x.carta] : [])),
     ]),
   ].map((c) => c.id);
-  expect(new Set(ids).size).toBe(115);
-  expect(ids.length).toBe(115);
+  expect(new Set(ids).size).toBe(116);
+  expect(ids.length).toBe(116);
 }
