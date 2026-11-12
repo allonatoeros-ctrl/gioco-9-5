@@ -240,6 +240,110 @@ const GIOCOLIERE = `
 </svg>
 `;
 
+/** Cambio Tetta: gufo arrabbiato col coltello e la tetta di pezza cucita. */
+const CAMBIO_TETTA = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 700" role="img" aria-label="Carta Cambio Tetta: gufo arrabbiato con coltello e tetta di pezza cucita">
+  <defs><clipPath id="ct-dentro"><rect x="30" y="30" width="440" height="640" rx="20"/></clipPath></defs>
+  <rect x="6" y="6" width="488" height="688" rx="34" fill="#fffdf5" stroke="#c9c2a8" stroke-width="6"/>
+  <g clip-path="url(#ct-dentro)" stroke="#3a2a20" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="30" y="30" width="440" height="640" fill="#efe4cc" stroke="none"/>
+    <g stroke="#cdbb98" stroke-width="2" fill="none"><path d="M60 30 l-300 300" /><path d="M88 30 l-300 300" /><path d="M116 30 l-300 300" /><path d="M144 30 l-300 300" /><path d="M172 30 l-300 300" /><path d="M200 30 l-300 300" /><path d="M228 30 l-300 300" /><path d="M256 30 l-300 300" /><path d="M284 30 l-300 300" /><path d="M312 30 l-300 300" /><path d="M340 30 l-300 300" /><path d="M368 30 l-300 300" /><path d="M396 30 l-300 300" /><path d="M424 30 l-300 300" /><path d="M452 30 l-300 300" /><path d="M480 30 l-300 300" /><path d="M508 30 l-300 300" /><path d="M536 30 l-300 300" /><path d="M564 30 l-300 300" /><path d="M592 30 l-300 300" /><path d="M620 30 l-300 300" /><path d="M648 30 l-300 300" /><path d="M676 30 l-300 300" /><path d="M704 30 l-300 300" /><path d="M732 30 l-300 300" /><path d="M760 30 l-300 300" /><path d="M788 30 l-300 300" /><path d="M-300 30 l300 300" /><path d="M-272 30 l300 300" /><path d="M-244 30 l300 300" /><path d="M-216 30 l300 300" /><path d="M-188 30 l300 300" /><path d="M-160 30 l300 300" /><path d="M-132 30 l300 300" /><path d="M-104 30 l300 300" /><path d="M-76 30 l300 300" /><path d="M-48 30 l300 300" /><path d="M-20 30 l300 300" /><path d="M8 30 l300 300" /><path d="M36 30 l300 300" /><path d="M64 30 l300 300" /><path d="M92 30 l300 300" /><path d="M120 30 l300 300" /><path d="M148 30 l300 300" /><path d="M176 30 l300 300" /><path d="M204 30 l300 300" /><path d="M232 30 l300 300" /><path d="M260 30 l300 300" /><path d="M288 30 l300 300" /><path d="M316 30 l300 300" /><path d="M344 30 l300 300" /><path d="M372 30 l300 300" /><path d="M400 30 l300 300" /><path d="M428 30 l300 300" /><path d="M456 30 l300 300" /></g>
+    <!-- corpo peloso -->
+    <path d="M410 370 L420 395 L406 417 L411 444 L394 461 L395 489 L375 501 L371 528 L350 534 L341 560 L319 559 L306 581 L286 575 L269 593 L250 580 L231 593 L214 575 L194 581 L181 559 L159 560 L150 534 L129 528 L125 501 L105 489 L106 461 L89 444 L94 417 L80 395 L90 370 L80 345 L94 323 L89 296 L106 279 L105 251 L125 239 L129 212 L150 206 L159 180 L181 181 L194 159 L214 165 L231 147 L250 160 L269 147 L286 165 L306 159 L319 181 L341 180 L350 206 L371 212 L375 239 L395 251 L394 279 L411 296 L406 323 L420 345 L410 370 Z" fill="#6b5640"/>
+    <path d="M350 440 L355 462 L345 480 L345 503 L331 516 L325 538 L309 545 L298 563 L281 564 L267 576 L250 570 L233 576 L219 564 L202 563 L191 545 L175 538 L169 516 L155 503 L155 480 L145 462 L150 440 L145 418 L155 400 L155 377 L169 364 L175 342 L191 335 L202 317 L219 316 L233 304 L250 310 L267 304 L281 316 L298 317 L309 335 L325 342 L331 364 L345 377 L345 400 L355 418 L350 440 Z" fill="#e2d2b0" stroke-width="3"/>
+    <path d="M200 400 q15 10 30 0 M270 410 q15 10 30 0 M220 470 q15 10 30 0 M260 520 q15 10 30 0" fill="none" stroke="#a8936d" stroke-width="3"/>
+    <!-- ciuffi -->
+    <path d="M150 210 L120 100 L200 170 Z" fill="#6b5640"/>
+    <path d="M350 210 L380 100 L300 170 Z" fill="#6b5640"/>
+    <path d="M128 110 l-14 -10 M134 104 l-4 -16 M372 104 l4 -16 M378 110 l14 -10" fill="none" stroke-width="3"/>
+    <!-- muso -->
+    <ellipse cx="250" cy="240" rx="82" ry="62" fill="#8a7253"/>
+    <circle cx="214" cy="236" r="30" fill="#fffdf5"/><circle cx="286" cy="236" r="30" fill="#fffdf5"/>
+    <circle cx="220" cy="242" r="15" fill="#2a201a" stroke="none"/><circle cx="280" cy="242" r="15" fill="#2a201a" stroke="none"/>
+    <circle cx="224" cy="237" r="4" fill="#fffdf5" stroke="none"/><circle cx="284" cy="237" r="4" fill="#fffdf5" stroke="none"/>
+    <path d="M178 196 L246 222 M322 196 L254 222" fill="none" stroke="#2a201a" stroke-width="9"/>
+    <path d="M242 262 L258 262 L250 276 Z" fill="#e2b13c" stroke-width="3"/>
+    <path d="M236 280 L264 280 L264 302 L236 302 Z" fill="#fffdf5" stroke-width="3"/>
+    <path d="M250 280 L250 302" stroke-width="2.5"/>
+    <path d="M214 278 Q250 290 286 278" fill="none" stroke-width="3"/>
+    <!-- ala sinistra con coltello -->
+    <path d="M286 418 L330 360 L344 372 L300 428 Z" fill="#c9d3da"/>
+    <path d="M262 446 L292 418 L306 430 L276 458 Z" fill="#3a2a20"/>
+    <path d="M288 470 L292 481 L280 488 L275 499 L260 501 L248 508 L233 504 L218 505 L209 496 L195 491 L194 480 L186 470 L194 460 L195 449 L209 444 L218 435 L233 436 L248 432 L260 439 L275 441 L280 452 L292 459 L288 470 Z" fill="#6b5640"/>
+    <!-- ala destra con tetta di pezza -->
+    <path d="M404 470 L406 489 L397 502 L392 520 L378 525 L367 535 L354 529 L340 530 L331 515 L319 506 L318 487 L312 470 L318 453 L319 434 L331 425 L340 410 L354 411 L367 405 L378 415 L392 420 L397 438 L406 451 L404 470 Z" fill="#6b5640"/>
+    <circle cx="362" cy="450" r="36" fill="#f0a9a0"/>
+    <circle cx="362" cy="450" r="8" fill="#d97d72" stroke-width="3"/>
+    <path d="M336 426 Q362 444 388 426" fill="none" stroke-width="2.5" stroke-dasharray="6 5"/>
+    <!-- tavolo -->
+    <path d="M30 560 L470 560 L470 670 L30 670 Z" fill="#8a5a35"/>
+    <path d="M30 560 L470 560" stroke-width="5"/>
+    <path d="M50 590 q100 -8 200 0 q100 8 210 -2 M40 612 q120 10 240 0 M300 600 q80 -6 160 4" fill="none" stroke="#6b4226" stroke-width="3"/>
+    <!-- tetta cucita sul tavolo -->
+    <path d="M168 610 Q170 560 250 556 Q330 560 332 610 Z" fill="#f0a9a0"/>
+    <path d="M250 556 L250 610" fill="none" stroke-width="3"/>
+    <path d="M240 566 l20 8 M240 578 l20 8 M240 590 l20 8" fill="none" stroke-width="3"/>
+    <circle cx="210" cy="590" r="7" fill="#d97d72" stroke-width="3"/>
+  </g>
+  <rect x="30" y="30" width="440" height="640" rx="20" fill="none" stroke="#1f5d3a" stroke-width="4"/>
+  <rect x="110" y="628" width="280" height="36" rx="10" fill="#1f5d3a"/>
+  <text x="250" y="654" font-family="Georgia, 'Times New Roman', serif" font-size="22" font-weight="700" fill="#fffdf5" text-anchor="middle" letter-spacing="2">CAMBIO TETTA</text>
+  <text x="78" y="100" font-family="Georgia, 'Times New Roman', serif" font-size="56" font-weight="700" fill="#b3401d" text-anchor="middle">⇄</text>
+</svg>
+`;
+
+/** Stop / Suora: suora col divieto sul velo che fa segno col dito. */
+const STOP = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 700" role="img" aria-label="Carta Stop: suora col segno di divieto sul velo che fa segno col dito">
+  <defs><clipPath id="st-dentro"><rect x="30" y="30" width="440" height="640" rx="20"/></clipPath></defs>
+  <rect x="6" y="6" width="488" height="688" rx="34" fill="#fffdf5" stroke="#c9c2a8" stroke-width="6"/>
+  <g clip-path="url(#st-dentro)" stroke="#3a2a20" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="30" y="30" width="440" height="640" fill="#e9dfc8" stroke="none"/>
+    <!-- abito -->
+    <path d="M40 700 Q40 520 150 480 L330 480 Q460 520 470 700 Z" fill="#2b2a30"/>
+    <!-- velo -->
+    <path d="M110 520 Q90 300 120 170 Q160 70 250 66 Q350 70 382 170 Q410 300 392 520 Q330 470 250 470 Q170 470 110 520 Z" fill="#2b2a30"/>
+    <!-- bottoni -->
+    <g fill="#e9dfc8" stroke-width="2.5"><circle cx="252" cy="560" r="7"/><circle cx="254" cy="600" r="7"/><circle cx="256" cy="640" r="7"/></g>
+    <!-- colletto -->
+    <path d="M178 452 L322 452 L330 500 Q250 520 170 500 Z" fill="#fffdf5"/>
+    <path d="M186 462 L314 462" stroke-dasharray="3 8" stroke-width="3"/>
+    <!-- collo -->
+    <path d="M214 400 L214 456 L286 456 L286 400 Z" fill="#e7bf9c"/>
+    <!-- viso -->
+    <path d="M168 230 L332 230 L326 340 Q316 430 250 436 Q184 430 174 340 Z" fill="#f1cfae"/>
+    <path d="M186 300 q10 6 20 2 M300 296 q10 4 20 -2 M196 360 q6 12 4 22 M300 362 q-6 12 -4 22" fill="none" stroke="#c09774" stroke-width="2.5"/>
+    <!-- fascia bianca con divieto -->
+    <path d="M160 120 L340 120 L340 236 L160 236 Z" fill="#fffdf5"/>
+    <path d="M170 132 L170 226 M330 132 L330 226" stroke-dasharray="3 10" stroke-width="3"/>
+    <path d="M232 178 q8 -14 20 -4 q10 12 -4 20 q-18 6 -24 -12 q-4 -22 22 -26 q28 0 30 28" fill="none" stroke="#7a6a5a" stroke-width="3"/>
+    <circle cx="250" cy="176" r="40" fill="none" stroke="#b3401d" stroke-width="10"/>
+    <path d="M222 148 L278 204" stroke="#b3401d" stroke-width="10"/>
+    <!-- occhi -->
+    <path d="M190 266 Q208 252 228 264" fill="none" stroke-width="4"/>
+    <ellipse cx="210" cy="282" rx="18" ry="10" fill="#fffdf5" stroke-width="3"/>
+    <circle cx="212" cy="282" r="7" fill="#3a2a20" stroke="none"/>
+    <path d="M270 262 Q290 252 310 262" fill="none" stroke-width="4"/>
+    <path d="M272 284 Q290 276 308 284" fill="none" stroke-width="4"/>
+    <!-- naso e bocca con linguaccia -->
+    <path d="M250 290 Q238 330 244 336 Q252 342 262 334" fill="none" stroke-width="3.5"/>
+    <path d="M214 368 Q250 356 290 366 Q262 386 222 380 Z" fill="#c4645a" stroke-width="3"/>
+    <path d="M236 376 Q244 400 256 398 Q266 394 262 376 Z" fill="#e89c86" stroke-width="3"/>
+    <!-- mano alzata col dito -->
+    <path d="M276 520 L346 520 L356 600 L270 600 Z" fill="#fffdf5"/>
+    <path d="M282 532 L340 532" stroke-dasharray="3 8" stroke-width="3"/>
+    <path d="M272 520 Q262 470 270 430 Q276 400 296 398 L298 272 Q300 252 314 252 Q328 254 328 272 L328 400 Q360 404 366 440 Q370 490 348 520 Z" fill="#f1cfae"/>
+    <path d="M300 268 Q304 238 314 228 Q324 240 326 268 Z" fill="#b3401d" stroke-width="3"/>
+    <path d="M300 404 Q290 412 296 424 M330 410 q14 0 22 10 M336 436 q14 0 22 10 M338 462 q12 2 18 10" fill="none" stroke-width="3"/>
+    <!-- croce sulla mano -->
+    <path d="M296 492 L344 452 M310 456 L330 492" stroke="#3a2a20" stroke-width="6"/>
+  </g>
+  <rect x="30" y="30" width="440" height="640" rx="20" fill="none" stroke="#1f5d3a" stroke-width="4"/>
+  <rect x="110" y="628" width="280" height="36" rx="10" fill="#1f5d3a"/>
+  <text x="250" y="654" font-family="Georgia, 'Times New Roman', serif" font-size="22" font-weight="700" fill="#fffdf5" text-anchor="middle" letter-spacing="2">STOP</text>
+  <polygon points="102.0,91.9 87.9,106.0 68.1,106.0 54.0,91.9 54.0,72.1 68.1,58.0 87.9,58.0 102.0,72.1" fill="#b3401d" stroke="#fffdf5" stroke-width="3"/>
+  <text x="78" y="88" font-family="Arial, sans-serif" font-size="14" font-weight="700" fill="#fffdf5" text-anchor="middle">STOP</text>
+</svg>
+`;
+
 function comeImmagine(svg: string): string {
   return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
 }
@@ -249,5 +353,7 @@ export function illustrazione(carta: Carta): string | undefined {
   if (carta.tipo === 'numero') return carta.valore === 0 ? comeImmagine(CARTA_0) : undefined;
   if (carta.tipo === 'tagliatette') return comeImmagine(TAGLIATETTE);
   if (carta.tipo === 'giocoliere') return comeImmagine(GIOCOLIERE);
+  if (carta.tipo === 'cambioTetta') return comeImmagine(CAMBIO_TETTA);
+  if (carta.tipo === 'stop') return comeImmagine(STOP);
   return undefined;
 }
