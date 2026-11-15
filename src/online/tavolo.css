@@ -1,5 +1,5 @@
 /* Grafica del gioco online, pensata prima di tutto per il telefono.
-   Tre stili: Osteria (feltro verde), Notte e oro, Fumetto. Cambiano solo i colori qui sotto. */
+   Stile scelto: "Notte e oro" (predefinito). Osteria e Fumetto restano provabili con ?stile=. */
 
 :root,
 :root[data-stile="osteria"] {
@@ -366,7 +366,8 @@ input { font: inherit; }
 [data-stile="fumetto"] .mio.turno { border-color: var(--primario); box-shadow: none; }
 .mio .nome { font-weight: 800; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .carte-mie { flex: 1 1 auto; min-height: 0; container-type: size; display: flex; gap: 8px; align-items: center; overflow-x: auto; padding: 0 4px; scrollbar-width: none; }
-.carte-mie .carta { --w: calc(min(100cqh - 16px, 168px) * 5 / 7); }
+.carte-mie .carta { --w: min(calc((100cqh - 16px) * 5 / 7), 120px, calc((100cqw - 8px) / var(--n, 1) - 8px)); }
+.carte-mie.fitte .carta { --w: min(calc((100cqh - 16px) * 5 / 7), 120px, calc((100cqw - 12px) / (var(--n) * .62 + .38))); }
 .carte-mie.fitte .carta + .carta { margin-left: calc(var(--w) * -.38); }
 .carte-mie .vuoto { color: var(--muto); margin: 0 auto; }
 .mio.scegli-segnalino .carte-mie { padding: 10px 6px; }

@@ -39,7 +39,7 @@ const memoria = {
 };
 
 // ---------------------------------------------------------------------------
-// Stile grafico (tre direzioni da provare: ?stile=osteria | notte | fumetto)
+// Stile grafico: "Notte e oro", scelto da eros. Gli altri due restano provabili con ?stile=osteria | fumetto
 // ---------------------------------------------------------------------------
 
 const STILI = { osteria: 'Osteria', notte: 'Notte e oro', fumetto: 'Fumetto' } as const;
@@ -52,7 +52,7 @@ function stileScelto(): Stile {
   }
   let s: string | null = null;
   try { s = localStorage.getItem('nove-mezzo:stile'); } catch { /* niente */ }
-  return s && s in STILI ? (s as Stile) : 'osteria';
+  return s && s in STILI ? (s as Stile) : 'notte';
 }
 function applicaStile(s: Stile) {
   document.documentElement.dataset.stile = s;
@@ -285,24 +285,9 @@ function mostraInizio(errore = '', codiceProposto = '') {
   riga.append(cod, entra);
 
   box.append(campoNome, err, crea, separatore, riga);
-  pagina.append(testa, box, sceltaStile());
+  pagina.append(testa, box);
   app.append(pagina);
   if (codiceProposto && !nome.value) nome.focus();
-}
-
-function sceltaStile() {
-  const box = el('div', 'scelta-stile');
-  box.append(el('span', undefined, 'Stile:'));
-  for (const [k, nome] of Object.entries(STILI) as [Stile, string][]) {
-    const b = el('button', 'chip', nome);
-    if (document.documentElement.dataset.stile === k) b.classList.add('attivo');
-    b.onclick = () => {
-      applicaStile(k);
-      box.querySelectorAll('.chip').forEach((x) => x.classList.toggle('attivo', x === b));
-    };
-    box.append(b);
-  }
-  return box;
 }
 
 // ---------------------------------------------------------------------------
@@ -615,7 +600,8 @@ function disegnaTavolo(s: Situazione) {
     if (g.riserva.length) testa.append(el('span', 'tag riserva', `✂ ${g.riserva.length}`));
     testa.append(segnaliniPiccoli(g));
     const carte = el('div', 'carte-mie');
-    if (g.inGioco.length > 5) carte.classList.add('fitte');
+    carte.style.setProperty('--n', String(Math.max(1, g.inGioco.length)));
+    if (g.inGioco.length > 4) carte.classList.add('fitte');
     g.inGioco.forEach((c, k) => {
       const scegli = segnalino && !c.coperta && segnalino.carte!.includes(c.carta.id)
         ? () => invia({ tipo: 'scegliSegnalino', cartaId: c.carta.id }, 'segnalino')
@@ -726,7 +712,7 @@ function disegnaAzioni(s: Situazione, v: VistaPartita, mie: AzionePermessa[]) {
     switch (a.tipo) {
       case 'rivela':
         msg.textContent = 'Gira una carta';
-        bottone('Gira una carta', 'primario', { tipo: 'rivela' }, 'rivela', '🂠');
+        bottone('Gira', 'primario', { tipo: 'rivela' }, 'rivela', '🂠');
         break;
       case 'pesca':
         if (a.obbligatoria) msg.textContent = `Pescata obbligatoria (ancora ${v.turno!.pescateObbligatorie})`;
@@ -790,7 +776,7 @@ function disegnaStoria(v: VistaPartita) {
     lista.append(el('li', `ev ev-${e.tipo}`, e.testo));
   }
   const info = el('p', 'nota', `Stanza ${situazione?.stanza.codice ?? ''} · Mazzo ${v.carteNelMazzo} · Scarti ${v.carteNegliScarti}`);
-  foglio.append(testa, lista, info, sceltaStile());
+  foglio.append(testa, lista, info);
   velo.append(foglio);
   setTimeout(() => (lista.scrollTop = lista.scrollHeight));
   return velo;
