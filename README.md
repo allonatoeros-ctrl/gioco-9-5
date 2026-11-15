@@ -29,8 +29,20 @@ Alla fine deve comparire `Tests  114 passed (114)` e nessuna riga rossa.
 npm run avvia
 ```
 
-Poi apri l'indirizzo che compare (di solito http://localhost:5173). Si sceglie il numero di giocatori e i nomi, e si gioca tutti sullo stesso schermo: i pulsanti in basso mostrano solo le mosse permesse. Le carte coperte si vedono come dorso blu. Per vincere un segnalino si clicca una propria carta scoperta.
+Poi apri l'indirizzo che compare aggiungendo `/prototipo.html` (di solito http://localhost:5173/prototipo.html). Si sceglie il numero di giocatori e i nomi, e si gioca tutti sullo stesso schermo: i pulsanti in basso mostrano solo le mosse permesse. Le carte coperte si vedono come dorso blu. Per vincere un segnalino si clicca una propria carta scoperta.
 
 ## Pagina unica senza installazione
 
 `npm run pagina-unica` crea `dist/gioco-singolo.html`: un solo file con dentro tutto il gioco, che si apre con un doppio clic o si pubblica così com'è.
+
+## Versione online (Fase C, in costruzione)
+
+`npm run avvia` e poi http://localhost:5173 apre il gioco online. Per provarlo senza internet: http://localhost:5173/?finto (server finto nel browser; ogni scheda è un giocatore diverso).
+
+Database e server su Supabase, spiegati in `docs/online.md`.
+
+- `supabase/migrations/` – le tabelle e le regole di sicurezza del database
+- `supabase/functions/gioco/` – il server di gioco (usa il motore impacchettato con `npm run prepara-server`)
+- `src/server/` – avvio partita, mosse, vista pubblica senza carte coperte
+- `src/online/cliente.ts` – il collegamento con il server
+- `src/online/schermata.ts` – la schermata online (pagina `index.html`)

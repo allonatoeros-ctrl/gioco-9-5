@@ -54,3 +54,17 @@ button.avviso { background: var(--acc); color: var(--su-acc); border-color: var(
 .registro p { margin: .2rem 0; padding-bottom: .2rem; border-bottom: 1px dotted var(--bordo-p); }
 .registro p.nuova { font-weight: 700; background: var(--nuova); }
 .fine { text-align: center; font-size: 1.3rem; }
+/* Gioco online */
+button.largo { display: block; width: 100%; margin: .5rem 0; padding: .75rem 1rem; }
+button:disabled { opacity: .55; cursor: default; }
+.oppure { text-align: center; color: var(--muto); margin: 1.2rem 0 .2rem; }
+.centro input.codice { text-transform: uppercase; letter-spacing: .3em; font-size: 1.3rem; text-align: center; }
+.codice-grande { font-size: 2.6rem; font-weight: 800; letter-spacing: .25em; text-align: center; margin: .4rem 0 .8rem; color: var(--verde); }
+.lista-giocatori { padding-left: 1.2rem; }
+.lista-giocatori li { margin: .3rem 0; }
+.giocatore.io { background: color-mix(in srgb, var(--pannello) 85%, var(--verde)); }
+.azioni { position: sticky; bottom: 0; z-index: 1; box-shadow: 0 -2px 10px rgb(0 0 0 / .15); }
+@media (max-width: 900px) {
+  .azioni button { flex: 1 1 auto; padding: .8rem 1rem; }
+  .registro { max-height: 40vh; }
+}
