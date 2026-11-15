@@ -479,3 +479,6 @@ input { font: inherit; }
 .tocca-riga { margin: 0; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 .centro-tavolo.compatto .tocca-a-te { font-family: var(--font-titolo); font-size: 1.5rem; }
 .info-mano { white-space: nowrap; min-width: 0; overflow: hidden; }
+[data-stile="fumetto"] .centro-tavolo.compatto .tocca-a-te { -webkit-text-stroke: 0; text-shadow: 2px 2px 0 #2a1d14; }
+[data-stile="fumetto"] .carta.mini { outline-width: 1.5px; }
+.tasto.secondario.attesa::after, .tasto.leggero.attesa::after { border-color: var(--su-secondario) transparent var(--su-secondario) transparent; }
