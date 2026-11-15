@@ -1,17 +1,19 @@
 {
   "name": "gioco-9-5",
   "version": "1.0.0",
-  "description": "Gioco di carte 9,5 - cervello del gioco (Fase A)",
+  "description": "Gioco di carte 9,5 - motore, prototipo e versione online",
   "scripts": {
     "test": "vitest run",
     "controllo": "tsc --noEmit",
     "avvia": "vite",
     "costruisci": "vite build",
-    "pagina-unica": "node tools/crea-pagina-unica.mjs"
+    "pagina-unica": "node tools/crea-pagina-unica.mjs",
+    "prepara-server": "node tools/prepara-server.mjs"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.16",
     "@types/node": "^26.6.5",
     "esbuild": "^0.28.2",
     "typescript": "^7.0.2",
@@ -19,5 +21,8 @@
     "vitest": "^5.0.5"
   },
   "private": true,
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.119.0"
+  }
 }

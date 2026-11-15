@@ -34,3 +34,12 @@ Poi apri l'indirizzo che compare (di solito http://localhost:5173). Si sceglie i
 ## Pagina unica senza installazione
 
 `npm run pagina-unica` crea `dist/gioco-singolo.html`: un solo file con dentro tutto il gioco, che si apre con un doppio clic o si pubblica così com'è.
+
+## Versione online (Fase C, in costruzione)
+
+Database e server su Supabase, spiegati in `docs/online.md`.
+
+- `supabase/migrations/` – le tabelle e le regole di sicurezza del database
+- `supabase/functions/gioco/` – il server di gioco (usa il motore impacchettato con `npm run prepara-server`)
+- `src/server/` – avvio partita, mosse, vista pubblica senza carte coperte
+- `src/online/cliente.ts` – il collegamento che userà la schermata online
