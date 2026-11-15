@@ -10,7 +10,8 @@ Questo documento spiega, in parole semplici, come funziona la versione online. �
 | **Server di gioco** (Edge Function `gioco`) | Riceve le mosse, le fa controllare al motore delle regole, salva il risultato. | `supabase/functions/gioco/` |
 | **Motore delle regole** | Lo stesso della Fase A, senza nessuna modifica. | `src/engine/` |
 | **Logica del server** | Avvio partita, mosse, e la "vista pubblica" che nasconde le carte coperte. | `src/server/` |
-| **Collegamento per il telefono** | Le funzioni che la futura schermata online userà: crea stanza, entra, gioca, ascolta. | `src/online/cliente.ts` |
+| **Collegamento per il telefono** | Crea stanza, entra, gioca, ascolta in tempo reale. | `src/online/cliente.ts` |
+| **Schermata online** | Pagina iniziale, sala d'attesa con codice e link da condividere, tavolo di gioco. | `index.html`, `src/online/schermata.ts` |
 | **Sito** (Vercel) | Pubblicherà le pagine del gioco. Non ancora fatto. | – |
 
 ## 2. Come si gioca, passo per passo
@@ -49,8 +50,8 @@ Questo documento spiega, in parole semplici, come funziona la versione online. �
 ## 6. Cosa NON c'è ancora (va deciso o fatto)
 
 1. **Tempi e disconnessioni (O5, O6, O7, O8)**: nel regolamento sono proposte "da confermare". Il database è pronto (ultimo contatto, versione), ma i timer non sono attivi. Oggi non si può uscire da una partita in corso.
-2. **La schermata online**: le pagine per creare/entrare in una stanza e giocare dal telefono. Il collegamento (`src/online/cliente.ts`) è pronto.
-3. **Pubblicazione su Vercel**: si fa quando c'è la schermata online.
+2. **Grafica delle carte** nella schermata online: per ora le carte sono scritte, non disegnate.
+3. **Pubblicazione su Vercel**: si collega il repository a Vercel (comando di costruzione `npm run costruisci`, cartella `dist`).
 4. **Carta Spione** (regolamento v1.2): il motore è ancora a 115 carte.
 
 ## 7. Comandi utili
