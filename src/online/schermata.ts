@@ -9,6 +9,7 @@ import type { AzionePermessa, Evento } from '../engine';
 import type { VistaPartita, GiocatoreVista } from '../server/vista';
 import { illustrazione } from '../ui/illustrazioni';
 import { ClienteOnline, ErroreOnline, RichiestaMossa, Situazione } from './cliente';
+import { calcolaDaBattere, cartaParlante, consiglia, lancioMoneta, moneta, sfera, targhettaDaBattere } from './vivo';
 
 const app = document.getElementById('app')!;
 // Con `npm run avvia` e ?finto nell'indirizzo si usa un server finto nel browser (solo per provare).
@@ -79,7 +80,7 @@ let ultimoEventoVisto: string | null = null;
 /** Le carte mostrate l'ultima volta, per animare solo quelle nuove o appena girate. */
 let cartePrima: { mano: number; giocatori: string[][] } | null = null;
 let turnoPrima: number | null = null;
-const annunci: { testo: string; tono: string; sotto?: string }[] = [];
+const annunci: { testo: string; tono: string; sotto?: string; chi?: string }[] = [];
 let annuncioInCorso = false;
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, classe?: string, testo?: string): HTMLElementTagNameMap[K] {
@@ -124,7 +125,7 @@ function vibra(ms: number | number[]) {
 
 type Taglia = 'mini' | 'media' | 'grande';
 
-function disegnaCarta(carta: Carta | null, taglia: Taglia, opz: { fattore?: number; scegli?: () => void; anima?: 'entra' | 'gira' } = {}) {
+function disegnaCarta(carta: Carta | null, taglia: Taglia, opz: { fattore?: number; scegli?: () => void; gira?: () => void; anima?: 'entra' | 'gira' } = {}) {
   const c = el('div', `carta ${taglia}`);
   if (!carta) {
     c.classList.add('coperta');
@@ -150,6 +151,17 @@ function disegnaCarta(carta: Carta | null, taglia: Taglia, opz: { fattore?: numb
     }
   }
   if (opz.anima) c.classList.add(`anima-${opz.anima}`);
+  if (opz.gira) {
+    // Carta coperta da girare: basta toccarla.
+    const gira = opz.gira;
+    c.classList.add('da-girare');
+    c.tabIndex = 0;
+    c.setAttribute('role', 'button');
+    c.setAttribute('aria-label', 'Carta coperta: tocca per girarla');
+    const tocca = () => { c.classList.add('si-gira'); setTimeout(gira, 220); };
+    c.onclick = tocca;
+    c.onkeydown = (ev) => { if (ev.key === 'Enter' || ev.key === ' ') tocca(); };
+  }
   if (opz.scegli) {
     c.classList.add('sceglibile');
     c.tabIndex = 0;
@@ -553,6 +565,7 @@ function disegnaTavolo(s: Situazione) {
   const inTurno = interrotta ? null : v.turno?.giocatore ?? null;
   const mie = interrotta ? [] : v.azioniPermesse.filter((a) => a.giocatore === io);
   const segnalino = mie.find((a) => a.tipo === 'scegliSegnalino');
+  const consiglio = io !== null && inTurno === io ? consiglia(v, io, mie) : null;
   const postoDi = (i: number) => s.partita!.posti[i];
   const sedutoDi = (i: number) => s.giocatori.find((x) => x.posto === postoDi(i));
 
@@ -603,7 +616,7 @@ function disegnaTavolo(s: Situazione) {
     const mini = el('div', 'carte-mini');
     g.inGioco.forEach((c, k) => mini.append(disegnaCarta(c.coperta ? null : c.carta, 'mini', { anima: animazioneCarta(v, i, k) })));
     riga2.append(mini);
-    if (p) riga2.append(el('span', `punti ${g.esito === 'sballato' ? 'sballato' : ''}`, p));
+    if (p) riga2.append(sfera(g, 'piccola'));
     riga2.append(segnaliniPiccoli(g));
     box.append(riga1, riga2);
     if (i === v.primoGiocatore) box.append(el('span', 'mazziere', '1°'));
@@ -638,6 +651,11 @@ function disegnaTavolo(s: Situazione) {
     const riga = el('p', 'tocca-riga');
     riga.append(el('strong', 'tocca-a-te', 'Tocca a te!'), el('span', 'sotto-testo', suggerimento(v, mie)));
     riflettore.append(riga);
+    if (consiglio) riflettore.append(cartaParlante(consiglio));
+  } else if (v.fase === 'moneta') {
+    const riga = el('div', 'riga-moneta');
+    riga.append(moneta('piccola in-attesa'), el('p', 'grande-testo', testoFase(v, io)));
+    riflettore.append(riga);
   } else {
     riflettore.append(el('p', 'grande-testo', testoFase(v, io)));
   }
@@ -667,19 +685,22 @@ function disegnaTavolo(s: Situazione) {
     const carte = el('div', 'carte-mie');
     carte.style.setProperty('--n', String(Math.max(1, g.inGioco.length)));
     if (g.inGioco.length > 4) carte.classList.add('fitte');
+    const puoGirare = mie.some((a) => a.tipo === 'rivela') && inInvio === null;
     g.inGioco.forEach((c, k) => {
       const scegli = segnalino && !c.coperta && segnalino.carte!.includes(c.carta.id)
         ? () => invia({ tipo: 'scegliSegnalino', cartaId: c.carta.id }, 'segnalino')
         : undefined;
-      carte.append(disegnaCarta(c.coperta ? null : c.carta, 'grande', { fattore: c.coperta ? undefined : c.fattore, scegli, anima: animazioneCarta(v, io, k) }));
+      const gira = puoGirare && c.coperta ? () => invia({ tipo: 'rivela' }, 'rivela') : undefined;
+      carte.append(disegnaCarta(c.coperta ? null : c.carta, 'grande', { fattore: c.coperta ? undefined : c.fattore, scegli, gira, anima: animazioneCarta(v, io, k) }));
     });
+    if (consiglio && (consiglio.umore === 'lascia')) mio.classList.add('rischio-alto');
     if (g.inGioco.length === 0) carte.append(el('p', 'vuoto', g.esito === 'nonPartecipa' ? 'Questa mano la guardi da fuori' : 'Nessuna carta davanti a te'));
-    mio.append(testa, carte, misuratore(g));
+    mio.append(testa, carte, misuratore(g, targhettaDaBattere(calcolaDaBattere(v, io), g.esito)));
     gioco.append(mio);
   }
 
   // --- pulsanti
-  gioco.append(disegnaAzioni(s, v, mie));
+  gioco.append(disegnaAzioni(s, v, mie, consiglio?.umore));
 
   if (storiaAperta) gioco.append(disegnaStoria(v));
   else if (interrotta) gioco.append(disegnaPartitaInterrotta(s, v));
@@ -697,21 +718,19 @@ function disegnaTavolo(s: Situazione) {
   mostraAnnunci();
 }
 
-/** Barra del punteggio verso 9,5: verde, poi arancio vicino al limite, rossa se si sballa. */
-function misuratore(g: GiocatoreVista) {
-  const box = el('div', 'misuratore');
-  if (g.inGioco.length === 0) return box;
-  const numeri = haNumeriche(g);
-  const p = g.punteggio;
-  const sballato = g.esito === 'sballato' || p > 9.5;
-  const barra = el('div', 'barra');
-  const pieno = el('div', 'pieno');
-  pieno.style.width = `${Math.min(100, (p / 9.5) * 100)}%`;
-  pieno.classList.add(sballato ? 'rosso' : p >= 8 ? 'caldo' : 'ok');
-  barra.append(pieno);
-  const etichetta = el('span', 'etichetta-punti');
-  etichetta.append(el('strong', undefined, numeri ? fmt(p) : '–'), document.createTextNode(sballato ? ' sballato!' : ' / 9,5'));
-  box.append(barra, etichetta);
+/** Il punteggio verso 9,5 dentro la sfera, con accanto (per me) il punteggio da battere. */
+function misuratore(g: GiocatoreVista, accanto?: HTMLElement) {
+  const box = el('div', 'misuratore con-sfera');
+  if (g.inGioco.length === 0) {
+    if (accanto) box.append(accanto);
+    return box;
+  }
+  const sballato = g.esito === 'sballato' || g.punteggio > 9.5;
+  const su = el('span', 'su');
+  const scoperte = g.inGioco.some((c) => !c.coperta);
+  su.append(el('strong', undefined, sballato ? 'Sballato!' : haNumeriche(g) ? 'punti' : scoperte ? 'solo speciali' : 'ancora niente'), document.createTextNode(sballato ? 'oltre 9,5' : 'su 9,5'));
+  box.append(sfera(g, 'grande'), su);
+  if (accanto) box.append(accanto);
   if (sballato) box.classList.add('sballato');
   return box;
 }
@@ -742,7 +761,7 @@ function suggerimento(v: VistaPartita, mie: AzionePermessa[]): string {
   return '';
 }
 
-function disegnaAzioni(s: Situazione, v: VistaPartita, mie: AzionePermessa[]) {
+function disegnaAzioni(s: Situazione, v: VistaPartita, mie: AzionePermessa[], umore?: string) {
   const box = el('footer', 'azioni');
   if (v.fase === 'finita' || s.partita?.finita) return box;
   const msg = el('div', 'msg');
@@ -772,6 +791,10 @@ function disegnaAzioni(s: Situazione, v: VistaPartita, mie: AzionePermessa[]) {
     b.disabled = inInvio !== null;
     if (inInvio === chiave) b.classList.add('attesa');
     b.onclick = () => invia(mossa, chiave);
+    // La carta parlante strizza l'occhio al bottone che consiglia.
+    const spingi = umore === 'spingi' || umore === 'costretto';
+    const lascia = umore === 'lascia' || umore === 'perfetto';
+    if ((spingi && chiave === 'pesca') || (lascia && chiave === 'fermati')) b.classList.add('consigliato');
     tasti.append(b);
   };
   msg.textContent = 'Tocca a te!';
@@ -897,9 +920,11 @@ function raccogliAnnunci(v: VistaPartita, io: number | null) {
       case 'pareggio':
         annunci.push({ testo: 'Pareggio!', tono: 'caldo' });
         break;
-      case 'moneta':
-        annunci.push({ testo: `Esce ${e.testo.match(/esce (\w+)/)?.[1] ?? ''}!`, tono: 'caldo' });
+      case 'moneta': {
+        const scelta = e.testo.match(/sceglie (\w+)/)?.[1];
+        annunci.push({ testo: e.testo.match(/esce (\w+)/)?.[1] ?? 'testa', tono: 'moneta', sotto: scelta, chi: e.testo.match(/^(.*) sceglie/)?.[1] });
         break;
+      }
       case 'rimescola':
         annunci.push({ testo: 'Si rimescola il mazzo', tono: 'neutro' });
         break;
@@ -915,6 +940,18 @@ function mostraAnnunci() {
   if (annuncioInCorso || annunci.length === 0) return;
   const a = annunci.shift()!;
   annuncioInCorso = true;
+  if (a.tono === 'moneta') {
+    // La moneta vola, gira e cade sulla faccia uscita.
+    const { velo, durata } = lancioMoneta(a.testo, a.sotto, a.chi);
+    document.body.append(velo);
+    vibra([20, 40, 20, 40, 20]);
+    setTimeout(() => vibra(80), 1700);
+    setTimeout(() => {
+      velo.classList.add('via');
+      setTimeout(() => { velo.remove(); annuncioInCorso = false; mostraAnnunci(); }, 350);
+    }, durata);
+    return;
+  }
   const box = el('div', `annuncio ${a.tono}`);
   box.setAttribute('role', 'status');
   box.append(el('strong', undefined, a.testo));
