@@ -483,3 +483,21 @@ input { font: inherit; }
 [data-stile="fumetto"] .centro-tavolo.compatto .tocca-a-te { -webkit-text-stroke: 0; text-shadow: 2px 2px 0 #2a1d14; }
 [data-stile="fumetto"] .carta.mini { outline-width: 1.5px; }
 .tasto.secondario.attesa::after, .tasto.leggero.attesa::after { border-color: var(--su-secondario) transparent var(--su-secondario) transparent; }
+
+/* ---------- uscire dalla partita ---------- */
+.tasto-esci {
+  flex: none; min-height: 44px; padding: 0 14px; border-radius: 999px; cursor: pointer;
+  border: 2px solid var(--bordo-pannello); background: var(--pannello); color: inherit; font-weight: 700; font-size: .9rem;
+}
+.tasto-esci.attesa { opacity: .5; }
+[data-stile="fumetto"] .tasto-esci { border: 3px solid #2a1d14; }
+.velo.centrato { align-items: center; padding: 16px; }
+.conferma {
+  width: 100%; max-width: 380px; background: var(--foglio); color: var(--testo-foglio); text-align: center;
+  display: flex; flex-direction: column; gap: 10px; animation: salta .35s cubic-bezier(.2, .9, .3, 1.2) both;
+}
+.conferma h2 { font-family: var(--font-titolo); font-size: 1.5rem; }
+.conferma p { color: var(--muto-foglio); }
+.conferma .tasto.leggero { color: var(--muto-foglio); }
+.conferma .corona { font-size: 3rem; animation: none; }
+.conferma .errore:empty, .podio .errore:empty { display: none; }

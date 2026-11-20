@@ -6,6 +6,8 @@
 // - creaStanza(nome):  crea una stanza e restituisce il codice da passare agli amici.
 // - entraInStanza(codice, nome): entra, oppure rientra al proprio posto.
 // - osservaStanza(codice, cb): chiama cb ogni volta che cambia qualcosa (giocatori, partita).
+// - esciDallaStanza:  esce (anche a partita in corso: la partita si interrompe per tutti).
+// - ricominciaStanza: a partita finita, tutti tornano in sala d'attesa per rigiocare.
 // - avvia / inviaMossa: chiedono al server di avviare la partita o di fare una mossa.
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
@@ -93,6 +95,12 @@ export class ClienteOnline {
 
   async esciDallaStanza(codice: string): Promise<void> {
     const { error } = await this.sb.rpc('esci_dalla_stanza', { p_codice: codice });
+    if (error) throw new ErroreOnline(error.message);
+  }
+
+  /** A partita finita: riporta tutti in sala d'attesa con le stesse persone. */
+  async ricominciaStanza(codice: string): Promise<void> {
+    const { error } = await this.sb.rpc('ricomincia_stanza', { p_codice: codice });
     if (error) throw new ErroreOnline(error.message);
   }
 

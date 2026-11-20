@@ -19,7 +19,7 @@ function vuoleFinto() {
     return sessionStorage.getItem('finto') === '1';
   } catch { return false; }
 }
-type Cliente = Pick<ClienteOnline, 'accedi' | 'creaStanza' | 'entraInStanza' | 'esciDallaStanza' | 'leggiSituazione' | 'osservaStanza' | 'avvia' | 'inviaMossa'>;
+type Cliente = Pick<ClienteOnline, 'accedi' | 'creaStanza' | 'entraInStanza' | 'esciDallaStanza' | 'ricominciaStanza' | 'leggiSituazione' | 'osservaStanza' | 'avvia' | 'inviaMossa'>;
 const finto = import.meta.env.DEV && vuoleFinto();
 const cliente: Cliente = finto ? new (await import('./cliente-finto')).ClienteFinto() : new ClienteOnline();
 // Con il server finto ogni scheda è un giocatore diverso, quindi ognuna ha la sua memoria.
@@ -72,6 +72,8 @@ let smettiDiAscoltare: (() => void) | null = null;
 let inInvio: string | null = null;
 let avviso = '';
 let storiaAperta = false;
+/** La finestrella "Vuoi davvero uscire?" è aperta. */
+let confermaUscita = false;
 /** Ultimo evento già visto, per capire quali sono nuovi (il registro arriva "a finestra"). */
 let ultimoEventoVisto: string | null = null;
 /** Le carte mostrate l'ultima volta, per animare solo quelle nuove o appena girate. */
@@ -324,6 +326,8 @@ function caricamento(testo: string) {
 }
 
 function esciDallaStanza(errore = '') {
+  confermaUscita = false;
+  storiaAperta = false;
   smettiDiAscoltare?.();
   smettiDiAscoltare = null;
   codice = null;
@@ -331,6 +335,61 @@ function esciDallaStanza(errore = '') {
   memoria.scrivi('stanza', null);
   history.replaceState(null, '', location.pathname);
   mostraInizio(errore);
+}
+
+/**
+ * Esce davvero: avvisa il server (così gli altri lo sanno) e torna alla pagina iniziale.
+ * Anche se il server non risponde si torna comunque all'inizio: non si resta mai bloccati.
+ */
+async function esciETornaAllInizio(bottone?: HTMLButtonElement) {
+  const c = codice;
+  if (!c) return esciDallaStanza();
+  if (bottone) { bottone.disabled = true; bottone.classList.add('attesa'); }
+  try {
+    await cliente.esciDallaStanza(c);
+    esciDallaStanza();
+  } catch (e) {
+    esciDallaStanza(`Sei uscito, ma non sono riuscito ad avvisare gli altri (${messaggio(e)}).`);
+  }
+}
+
+/** Rigioca nella stessa stanza: tutti tornano in sala d'attesa. */
+async function rigioca(bottone: HTMLButtonElement) {
+  if (!codice) return;
+  bottone.disabled = true;
+  bottone.classList.add('attesa');
+  try {
+    await cliente.ricominciaStanza(codice);
+    storiaAperta = false;
+    situazione = await cliente.leggiSituazione(codice);
+    disegna();
+  } catch (e) {
+    avviso = messaggio(e);
+    bottone.disabled = false;
+    bottone.classList.remove('attesa');
+    disegna();
+  }
+}
+
+/** Finestrella di conferma prima di uscire. */
+function disegnaConfermaUscita(partitaInCorso: boolean) {
+  const velo = el('div', 'velo centrato');
+  velo.onclick = (ev) => { if (ev.target === velo) { confermaUscita = false; disegna(); } };
+  const box = el('div', 'pannello conferma');
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-label', 'Vuoi uscire?');
+  box.append(el('h2', undefined, partitaInCorso ? 'Vuoi uscire dalla partita?' : 'Vuoi uscire dalla stanza?'));
+  box.append(el('p', undefined, partitaInCorso
+    ? 'La partita si interrompe per tutti e torni alla pagina iniziale.'
+    : 'Torni alla pagina iniziale. Potrai rientrare con il codice.'));
+  const si = el('button', 'tasto caldo grande', 'Sì, esci');
+  si.onclick = () => void esciETornaAllInizio(si);
+  const no = el('button', 'tasto leggero', partitaInCorso ? 'No, continuo a giocare' : 'No, resto');
+  no.onclick = () => { confermaUscita = false; disegna(); };
+  box.append(si, no);
+  velo.append(box);
+  setTimeout(() => no.focus());
+  return velo;
 }
 
 function disegna() {
@@ -448,17 +507,11 @@ function disegnaAttesa(s: Situazione) {
     fondo.append(err, att);
   }
 
-  const esci = el('button', 'tasto leggero', 'Esci dalla stanza');
-  esci.onclick = async () => {
-    try {
-      await cliente.esciDallaStanza(s.stanza.codice);
-      esciDallaStanza();
-    } catch (e) {
-      err.textContent = messaggio(e);
-    }
-  };
+  const esci = el('button', 'tasto leggero', 'Esci e torna all\'inizio');
+  esci.onclick = () => { confermaUscita = true; disegna(); };
   pagina.append(esci, fondo);
   app.append(pagina);
+  if (confermaUscita) app.append(disegnaConfermaUscita(false));
 }
 
 // ---------------------------------------------------------------------------
@@ -494,8 +547,11 @@ function segnaliniPiccoli(g: GiocatoreVista) {
 function disegnaTavolo(s: Situazione) {
   const v = s.partita!.vista;
   const io = s.ioInPartita;
-  const inTurno = v.turno?.giocatore ?? null;
-  const mie = v.azioniPermesse.filter((a) => a.giocatore === io);
+  // Qualcuno è uscito a metà: la partita è chiusa ma il motore non l'ha "finita".
+  const interrotta = s.partita!.finita && v.fase !== 'finita';
+  const chiusa = interrotta || v.fase === 'finita';
+  const inTurno = interrotta ? null : v.turno?.giocatore ?? null;
+  const mie = interrotta ? [] : v.azioniPermesse.filter((a) => a.giocatore === io);
   const segnalino = mie.find((a) => a.tipo === 'scegliSegnalino');
   const postoDi = (i: number) => s.partita!.posti[i];
   const sedutoDi = (i: number) => s.giocatori.find((x) => x.posto === postoDi(i));
@@ -517,7 +573,14 @@ function disegnaTavolo(s: Situazione) {
   const storia = el('button', 'tasto-icona', '☰');
   storia.setAttribute('aria-label', 'Storia della partita e opzioni');
   storia.onclick = () => { storiaAperta = true; disegna(); };
-  testata.append(mano, meta, storia);
+  const esci = el('button', 'tasto-esci', 'Esci');
+  esci.setAttribute('aria-label', 'Esci dalla partita e torna all\'inizio');
+  esci.onclick = () => {
+    if (chiusa) return void esciETornaAllInizio(esci);
+    confermaUscita = true;
+    disegna();
+  };
+  testata.append(mano, meta, storia, esci);
   gioco.append(testata);
 
   // --- avversari
@@ -559,7 +622,9 @@ function disegnaTavolo(s: Situazione) {
   centro.append(mazzo);
 
   const riflettore = el('div', 'riflettore');
-  if (v.fase === 'finita') {
+  if (interrotta) {
+    riflettore.append(el('p', 'grande-testo', 'Partita interrotta'));
+  } else if (v.fase === 'finita') {
     riflettore.append(el('p', 'grande-testo', 'Partita finita'));
   } else if (inTurno !== null && inTurno !== io) {
     const g = v.giocatori[inTurno];
@@ -617,7 +682,9 @@ function disegnaTavolo(s: Situazione) {
   gioco.append(disegnaAzioni(s, v, mie));
 
   if (storiaAperta) gioco.append(disegnaStoria(v));
-  if (v.fase === 'finita') gioco.append(disegnaFinePartita(s, v));
+  else if (interrotta) gioco.append(disegnaPartitaInterrotta(s, v));
+  else if (v.fase === 'finita') gioco.append(disegnaFinePartita(s, v));
+  if (confermaUscita && !chiusa) gioco.append(disegnaConfermaUscita(true));
   app.append(gioco);
 
   // Memoria per le animazioni della prossima volta.
@@ -677,7 +744,7 @@ function suggerimento(v: VistaPartita, mie: AzionePermessa[]): string {
 
 function disegnaAzioni(s: Situazione, v: VistaPartita, mie: AzionePermessa[]) {
   const box = el('footer', 'azioni');
-  if (v.fase === 'finita') return box;
+  if (v.fase === 'finita' || s.partita?.finita) return box;
   const msg = el('div', 'msg');
   box.append(msg);
   if (avviso) {
@@ -776,7 +843,15 @@ function disegnaStoria(v: VistaPartita) {
     lista.append(el('li', `ev ev-${e.tipo}`, e.testo));
   }
   const info = el('p', 'nota', `Stanza ${situazione?.stanza.codice ?? ''} · Mazzo ${v.carteNelMazzo} · Scarti ${v.carteNegliScarti}`);
-  foglio.append(testa, lista, info);
+  const chiusa = !!situazione?.partita?.finita || v.fase === 'finita';
+  const esci = el('button', 'tasto secondario', chiusa ? 'Torna all\'inizio' : 'Esci dalla partita');
+  esci.onclick = () => {
+    if (chiusa) return void esciETornaAllInizio(esci);
+    storiaAperta = false;
+    confermaUscita = true;
+    disegna();
+  };
+  foglio.append(testa, lista, info, esci);
   velo.append(foglio);
   setTimeout(() => (lista.scrollTop = lista.scrollHeight));
   return velo;
@@ -880,12 +955,48 @@ function disegnaFinePartita(s: Situazione, v: VistaPartita) {
     li.append(carte, el('strong', 'conta', String(g.segnalini.length)));
     classifica.append(li);
   }
-  const nuova = el('button', 'tasto primario grande', 'Nuova partita');
-  nuova.onclick = () => esciDallaStanza();
+  box.append(classifica, ...bottoniFine(s, 'Rigioca con gli stessi'));
   const storia = el('button', 'tasto leggero', 'Rivedi come è andata');
   storia.onclick = () => { storiaAperta = true; disegna(); };
-  box.append(classifica, nuova, storia);
+  box.append(storia);
   velo.append(coriandoli, box);
+  return velo;
+}
+
+/** I due bottoni di fine partita: rigiocare nella stessa stanza o tornare alla pagina iniziale. */
+function bottoniFine(s: Situazione, testoRigioca: string): HTMLElement[] {
+  const err = el('p', 'errore', avviso);
+  err.setAttribute('role', 'alert');
+  avviso = '';
+  const out: HTMLElement[] = [err];
+  if (s.giocatori.length >= 2) {
+    const ancora = el('button', 'tasto primario grande', testoRigioca);
+    ancora.onclick = () => void rigioca(ancora);
+    out.push(ancora);
+  }
+  const inizio = el('button', `tasto ${s.giocatori.length >= 2 ? 'secondario' : 'primario'} grande`, 'Torna all\'inizio');
+  inizio.onclick = () => void esciETornaAllInizio(inizio);
+  out.push(inizio);
+  return out;
+}
+
+/** Qualcuno è uscito a metà partita. */
+function disegnaPartitaInterrotta(s: Situazione, v: VistaPartita) {
+  const velo = el('div', 'velo centrato');
+  const box = el('div', 'pannello conferma');
+  box.setAttribute('role', 'dialog');
+  const usciti = s.partita!.posti
+    .map((posto, i) => (s.giocatori.some((g) => g.posto === posto) ? null : v.giocatori[i].nome))
+    .filter((n): n is string => n !== null);
+  box.append(el('div', 'corona', '🚪'), el('h2', undefined, 'Partita interrotta'));
+  box.append(el('p', undefined, usciti.length
+    ? `${usciti.join(' e ')} ${usciti.length > 1 ? 'hanno lasciato' : 'ha lasciato'} la partita.`
+    : 'Qualcuno ha lasciato la partita.'));
+  box.append(...bottoniFine(s, 'Rigioca con chi è rimasto'));
+  const storia = el('button', 'tasto leggero', 'Rivedi come è andata');
+  storia.onclick = () => { storiaAperta = true; disegna(); };
+  box.append(storia);
+  velo.append(box);
   return velo;
 }
 

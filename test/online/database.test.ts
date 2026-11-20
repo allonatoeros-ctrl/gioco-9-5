@@ -5,10 +5,9 @@ import { readFileSync } from 'node:fs';
 import { PGlite } from '@electric-sql/pglite';
 import { beforeAll, describe, expect, it } from 'vitest';
 
-const MIGRAZIONE = readFileSync(
-  new URL('../../supabase/migrations/20261115180000_gioco_online.sql', import.meta.url),
-  'utf8',
-);
+const MIGRAZIONE = ['20261115180000_gioco_online.sql', '20261120180000_uscita_e_rivincita.sql']
+  .map((f) => readFileSync(new URL(`../../supabase/migrations/${f}`, import.meta.url), 'utf8'))
+  .join('\n');
 
 const FINTO_SUPABASE = `
   create role anon nologin; create role authenticated nologin; create role service_role nologin bypassrls;
@@ -139,10 +138,6 @@ describe('Database online', () => {
     expect(r.posto).toBe(0);
   });
 
-  it('non si esce da una partita in corso (decisione O8 ancora da confermare)', async () => {
-    await expect(come(BRUNO, `select esci_dalla_stanza($1)`, [codice])).rejects.toThrow('partita in corso');
-  });
-
   it('una mossa viene salvata solo se la versione è quella attesa', async () => {
     const [r] = await comeServer<{ v: number }>(
       `select server_registra_mossa($1, 0, 0::smallint, '{"tipo":"rivela"}', '{}', '{"fase":"turno"}', false) as v`,
@@ -183,6 +178,67 @@ describe('Database online', () => {
     await come(CARLA, `select esci_dalla_stanza($1)`, [r.codice]);
     const righe = (await db.query('select 1 from stanze where id = $1', [r.stanza_id])).rows;
     expect(righe).toHaveLength(0);
+  });
+
+  it('rientro da un altro telefono con lo stesso nome, solo se quel posto non è collegato', async () => {
+    // Bruno è seduto (posto 1) e la partita è finita/in corso: Carla da "un altro telefono" scrive "bruno".
+    await expect(come(CARLA, `select * from entra_in_stanza($1, 'bruno')`, [codice])).rejects.toThrow('ancora collegato');
+    await db.query(`update giocatori set ultimo_contatto = now() - interval '1 minute' where posto = 1`);
+    const [r] = await come<{ posto: number }>(CARLA, `select * from entra_in_stanza($1, ' Bruno ')`, [codice]);
+    expect(r.posto).toBe(1);
+    // Il vecchio "telefono" di Bruno non è più nella stanza; il nuovo sì.
+    expect(await come(BRUNO, 'select 1 from stanze where codice = $1', [codice])).toHaveLength(0);
+    expect(await come(CARLA, 'select 1 from stanze where codice = $1', [codice])).toHaveLength(1);
+    // Nomi che non c'erano: niente da fare.
+    await expect(come(BRUNO, `select * from entra_in_stanza($1, 'Zorro')`, [codice])).rejects.toThrow('già iniziata');
+    // Si rimette Bruno al suo posto per le prove seguenti.
+    await db.query(`update giocatori set utente_id = $1 where posto = 1 and stanza_id = (select id from stanze where codice = $2)`, [BRUNO, codice]);
+  });
+
+  it('se l\'host rientra da un altro telefono resta host', async () => {
+    const [r] = await come<{ codice: string }>(ALTRI[2], `select * from crea_stanza('Host2')`);
+    await come(ALTRI[3], `select * from entra_in_stanza($1, 'Ospite')`, [r.codice]);
+    await db.query(`update stanze set stato = 'in_corso' where codice = $1`, [r.codice]);
+    await db.query(`update giocatori set ultimo_contatto = now() - interval '1 minute'`);
+    await come(ALTRI[4], `select * from entra_in_stanza($1, 'host2')`, [r.codice]);
+    const [s] = await come<{ host_id: string }>(ALTRI[4], 'select host_id from stanze where codice = $1', [r.codice]);
+    expect(s.host_id).toBe(ALTRI[4]);
+  });
+
+  it('a fine partita "Rigioca" riporta tutti in sala d\'attesa e si può ripartire', async () => {
+    await expect(come(CARLA, `select ricomincia_stanza($1)`, [codice])).rejects.toThrow('Non sei in questa stanza');
+    await come(BRUNO, `select ricomincia_stanza($1)`, [codice]);
+    const [st] = await come<{ stato: string }>(ANNA, 'select stato from stanze where codice = $1', [codice]);
+    expect(st.stato).toBe('attesa');
+    expect(await come(ANNA, 'select 1 from partite')).toHaveLength(0);
+    // Premuto due volte (da due telefoni): nessun errore.
+    await come(ANNA, `select ricomincia_stanza($1)`, [codice]);
+    const [nuova] = await comeServer<{ id: string }>(
+      `select server_avvia_partita(s.id, $2, array[0,1]::smallint[], '{}', '{"fase":"turno"}') as id from stanze s where s.codice = $1`,
+      [codice, ANNA],
+    );
+    expect(nuova.id).toBeTruthy();
+    // A partita in corso "Rigioca" non si può usare.
+    await expect(come(ANNA, `select ricomincia_stanza($1)`, [codice])).rejects.toThrow('non è ancora finita');
+  });
+
+  it('se qualcuno esce a partita in corso, la partita si interrompe per tutti', async () => {
+    await come(BRUNO, `select esci_dalla_stanza($1)`, [codice]);
+    const [st] = await come<{ stato: string }>(ANNA, 'select stato from stanze where codice = $1', [codice]);
+    expect(st.stato).toBe('finita');
+    const [p] = await come<{ finita: boolean; posti: number[] }>(ANNA, 'select finita, posti from partite');
+    expect(p.finita).toBe(true);
+    // Anna vede che il posto 1 (Bruno) non è più seduto.
+    const seduti = await come<{ posto: number }>(ANNA, 'select posto from giocatori order by posto');
+    expect(seduti).toEqual([{ posto: 0 }]);
+    // Bruno non vede più la stanza, e non si accettano altre mosse.
+    expect(await come(BRUNO, 'select 1 from stanze where codice = $1', [codice])).toHaveLength(0);
+    await expect(
+      comeServer(`select server_registra_mossa(p.id, p.versione, 0::smallint, '{}', '{}', '{}', false) from partite p`),
+    ).rejects.toThrow();
+    // Anna può tornare all'inizio: la stanza sparisce.
+    await come(ANNA, `select esci_dalla_stanza($1)`, [codice]);
+    expect((await db.query('select 1 from stanze where codice = $1', [codice])).rows).toHaveLength(0);
   });
 
   it('i nomi devono avere da 1 a 20 caratteri', async () => {
