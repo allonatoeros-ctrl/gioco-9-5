@@ -10,7 +10,7 @@ import type { ClienteOnline, GiocatoreSeduto, RichiestaMossa, Situazione, Stanza
 import { ErroreOnline } from './cliente';
 
 interface Mondo {
-  stanze: Record<string, Stanza & { giocatori: GiocatoreSeduto[]; partita: null | { versione: number; posti: number[]; stato: Stato } }>;
+  stanze: Record<string, Stanza & { giocatori: GiocatoreSeduto[]; partita: null | { versione: number; posti: number[]; stato: Stato; interrotta?: boolean } }>;
 }
 
 const CHIAVE = 'nove-mezzo:finto';
@@ -20,7 +20,7 @@ const scrivi = (m: Mondo) => {
   window.dispatchEvent(new Event('mondo-finto'));
 };
 
-export class ClienteFinto implements Pick<ClienteOnline, 'accedi' | 'creaStanza' | 'entraInStanza' | 'esciDallaStanza' | 'segnalaPresenza' | 'leggiSituazione' | 'osservaStanza' | 'avvia' | 'inviaMossa'> {
+export class ClienteFinto implements Pick<ClienteOnline, 'accedi' | 'creaStanza' | 'entraInStanza' | 'esciDallaStanza' | 'ricominciaStanza' | 'segnalaPresenza' | 'leggiSituazione' | 'osservaStanza' | 'avvia' | 'inviaMossa'> {
   private utente = '';
 
   async accedi() {
@@ -59,10 +59,26 @@ export class ClienteFinto implements Pick<ClienteOnline, 'accedi' | 'creaStanza'
     const m = leggi();
     const s = m.stanze[codice];
     if (!s) return;
-    if (s.stato === 'in_corso') throw new ErroreOnline('Non si può ancora uscire da una partita in corso.');
+    if (!s.giocatori.some((g) => g.utente_id === this.utente)) return;
     s.giocatori = s.giocatori.filter((g) => g.utente_id !== this.utente);
+    // Come nel database vero: se si esce a partita in corso, la partita si interrompe per tutti.
+    if (s.stato === 'in_corso') {
+      s.stato = 'finita';
+      if (s.partita) s.partita.interrotta = true;
+    }
     if (s.giocatori.length === 0) delete m.stanze[codice];
     else if (s.host_id === this.utente) s.host_id = s.giocatori[0].utente_id;
+    scrivi(m);
+  }
+
+  async ricominciaStanza(codice: string) {
+    const m = leggi();
+    const s = m.stanze[codice];
+    if (!s || !s.giocatori.some((g) => g.utente_id === this.utente)) throw new ErroreOnline('Non sei in questa stanza.');
+    if (s.stato === 'attesa') return;
+    if (s.stato !== 'finita') throw new ErroreOnline('La partita non è ancora finita.');
+    s.partita = null;
+    s.stato = 'attesa';
     scrivi(m);
   }
 
@@ -78,7 +94,7 @@ export class ClienteFinto implements Pick<ClienteOnline, 'accedi' | 'creaStanza'
     return {
       stanza: { id: s.id, codice: s.codice, host_id: s.host_id, stato: s.stato },
       giocatori: s.giocatori,
-      partita: p && vista ? { id: s.id, posti: p.posti, versione: p.versione, vista, finita: p.stato.fase === 'finita' } : null,
+      partita: p && vista ? { id: s.id, posti: p.posti, versione: p.versione, vista, finita: p.stato.fase === 'finita' || !!p.interrotta } : null,
       ioPosto,
       ioInPartita: idx >= 0 ? idx : null,
     };
@@ -110,6 +126,7 @@ export class ClienteFinto implements Pick<ClienteOnline, 'accedi' | 'creaStanza'
     const m = leggi();
     const s = m.stanze[codice];
     const p = s.partita!;
+    if (p.interrotta) throw new ErroreOnline('La partita è stata interrotta.');
     if (p.versione !== versione) throw new ErroreOnline('La partita è andata avanti: aggiorna e riprova.', true);
     const io = s.giocatori.find((g) => g.utente_id === this.utente)!;
     try {

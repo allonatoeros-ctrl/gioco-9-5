@@ -49,7 +49,7 @@ Questo documento spiega, in parole semplici, come funziona la versione online. �
 
 ## 6. Cosa NON c'è ancora (va deciso o fatto)
 
-1. **Tempi e disconnessioni (O5, O6, O7, O8)**: nel regolamento sono proposte "da confermare". Il database è pronto (ultimo contatto, versione), ma i timer non sono attivi. Oggi non si può uscire da una partita in corso.
+1. **Tempi e disconnessioni (O5, O6, O7, O8)**: nel regolamento sono proposte "da confermare". Il database è pronto (ultimo contatto, versione), ma i timer non sono attivi. Per ora vale la regola semplice: chi preme **Esci** a partita in corso la interrompe per tutti; gli altri vedono chi è uscito e possono **rigiocare** tra loro (si torna in sala d'attesa con lo stesso codice) o tornare all'inizio.
 2. **Grafica delle carte** nella schermata online: per ora le carte sono scritte, non disegnate.
 3. **Pubblicazione su Vercel**: si collega il repository a Vercel (comando di costruzione `npm run costruisci`, cartella `dist`).
 4. **Carta Spione** (regolamento v1.2): il motore è ancora a 115 carte.
