@@ -180,6 +180,31 @@ describe('Database online', () => {
     expect(righe).toHaveLength(0);
   });
 
+  it('rientro da un altro telefono con lo stesso nome, solo se quel posto non è collegato', async () => {
+    // Bruno è seduto (posto 1) e la partita è finita/in corso: Carla da "un altro telefono" scrive "bruno".
+    await expect(come(CARLA, `select * from entra_in_stanza($1, 'bruno')`, [codice])).rejects.toThrow('ancora collegato');
+    await db.query(`update giocatori set ultimo_contatto = now() - interval '1 minute' where posto = 1`);
+    const [r] = await come<{ posto: number }>(CARLA, `select * from entra_in_stanza($1, ' Bruno ')`, [codice]);
+    expect(r.posto).toBe(1);
+    // Il vecchio "telefono" di Bruno non è più nella stanza; il nuovo sì.
+    expect(await come(BRUNO, 'select 1 from stanze where codice = $1', [codice])).toHaveLength(0);
+    expect(await come(CARLA, 'select 1 from stanze where codice = $1', [codice])).toHaveLength(1);
+    // Nomi che non c'erano: niente da fare.
+    await expect(come(BRUNO, `select * from entra_in_stanza($1, 'Zorro')`, [codice])).rejects.toThrow('già iniziata');
+    // Si rimette Bruno al suo posto per le prove seguenti.
+    await db.query(`update giocatori set utente_id = $1 where posto = 1 and stanza_id = (select id from stanze where codice = $2)`, [BRUNO, codice]);
+  });
+
+  it('se l\'host rientra da un altro telefono resta host', async () => {
+    const [r] = await come<{ codice: string }>(ALTRI[2], `select * from crea_stanza('Host2')`);
+    await come(ALTRI[3], `select * from entra_in_stanza($1, 'Ospite')`, [r.codice]);
+    await db.query(`update stanze set stato = 'in_corso' where codice = $1`, [r.codice]);
+    await db.query(`update giocatori set ultimo_contatto = now() - interval '1 minute'`);
+    await come(ALTRI[4], `select * from entra_in_stanza($1, 'host2')`, [r.codice]);
+    const [s] = await come<{ host_id: string }>(ALTRI[4], 'select host_id from stanze where codice = $1', [r.codice]);
+    expect(s.host_id).toBe(ALTRI[4]);
+  });
+
   it('a fine partita "Rigioca" riporta tutti in sala d\'attesa e si può ripartire', async () => {
     await expect(come(CARLA, `select ricomincia_stanza($1)`, [codice])).rejects.toThrow('Non sei in questa stanza');
     await come(BRUNO, `select ricomincia_stanza($1)`, [codice]);
