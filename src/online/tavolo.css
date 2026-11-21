@@ -508,3 +508,4 @@ input { font: inherit; }
 .pannello.computer .nota { margin: 0; }
 .obiettivo-computer { display: flex; flex-direction: column; gap: 6px; }
 .obiettivo-computer[hidden] { display: none; }
+

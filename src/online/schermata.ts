@@ -84,6 +84,8 @@ let avviso = '';
 let storiaAperta = false;
 /** La finestrella "Vuoi davvero uscire?" è aperta. */
 let confermaUscita = false;
+/** Le caselle degli avversari aperte per vedere le loro carte. */
+const avversariAperti = new Set<number>();
 /** Ultimo evento già visto, per capire quali sono nuovi (il registro arriva "a finestra"). */
 let ultimoEventoVisto: string | null = null;
 /** Le carte mostrate l'ultima volta, per animare solo quelle nuove o appena girate. */
@@ -315,9 +317,16 @@ function mostraInizio(errore = '', codiceProposto = '') {
 
 /** Il riquadro "Gioca contro il computer" della pagina iniziale. */
 function pannelloComputer(leggiNome: () => string | null, err: HTMLElement) {
-  const box = el('div', 'pannello computer');
-  box.append(el('h3', undefined, '🤖 Gioca contro il computer'));
-  box.append(el('p', 'nota', 'Da solo, anche senza internet. Quanti avversari vuoi?'));
+  // Chiuso è un solo bottone (così in pagina c'è un solo bottone giallo); toccandolo si apre la scelta.
+  const box = el('div', 'pannello computer chiuso');
+  const apri = el('button', 'tasto secondario grande', '🤖 Gioca contro il computer');
+  apri.onclick = () => box.classList.remove('chiuso');
+  box.append(apri);
+  const scelta = el('div', 'scelta-computer');
+  scelta.append(el('h3', undefined, '🤖 Contro il computer'));
+  scelta.append(el('p', 'nota', 'Da solo, anche senza internet. Quanti avversari vuoi?'));
+  // Se il server non risponde il computer è l'unica strada: si apre subito.
+  if (err.textContent) box.classList.remove('chiuso');
   let avversari = Number(memoria.leggi('avversari')) || 1;
   if (avversari < 1 || avversari > 5) avversari = 1;
   let obiettivo: 3 | 5 | 7 = 5;
@@ -340,7 +349,7 @@ function pannelloComputer(leggiNome: () => string | null, err: HTMLElement) {
     chips.querySelectorAll('.chip').forEach((x, k) => x.classList.toggle('attivo', k + 1 === avversari));
     // Con 4 o più giocatori (3 computer o più) si gioca a obiettivo punti.
     sceltaObiettivo.hidden = avversari < 3;
-    gioca.textContent = avversari === 1 ? 'Gioca contro il computer' : `Gioca contro ${avversari} computer`;
+    gioca.textContent = `Gioca! (${avversari} ${avversari === 1 ? 'avversario' : 'avversari'})`;
   };
   for (let n = 1; n <= 5; n++) {
     const b = el('button', 'chip grande', String(n));
@@ -366,7 +375,8 @@ function pannelloComputer(leggiNome: () => string | null, err: HTMLElement) {
       gioca.classList.remove('attesa');
     }
   };
-  box.append(chips, sceltaObiettivo, gioca);
+  scelta.append(chips, sceltaObiettivo, gioca);
+  box.append(scelta);
   return box;
 }
 
@@ -651,16 +661,10 @@ function disegnaTavolo(s: Situazione) {
   const meta = el('div', 'info-meta');
   meta.append(el('span', 'chip-info', v.modalita === 'obiettivoPunti' ? `Si vince a ${v.obiettivoPunti} ★` : 'Fino a fine mazzo'));
   const storia = el('button', 'tasto-icona', '☰');
-  storia.setAttribute('aria-label', 'Storia della partita e opzioni');
+  storia.setAttribute('aria-label', 'Menu: storia della partita ed esci');
   storia.onclick = () => { storiaAperta = true; disegna(); };
-  const esci = el('button', 'tasto-esci', 'Esci');
-  esci.setAttribute('aria-label', 'Esci dalla partita e torna all\'inizio');
-  esci.onclick = () => {
-    if (chiusa) return void esciETornaAllInizio(esci);
-    confermaUscita = true;
-    disegna();
-  };
-  testata.append(mano, meta, storia, esci);
+  // "Esci" sta dentro il menu ☰, così non si tocca per sbaglio.
+  testata.append(mano, meta, storia);
   gioco.append(testata);
 
   // --- avversari
@@ -671,21 +675,37 @@ function disegnaTavolo(s: Situazione) {
     const g = v.giocatori[i];
     const st = statoGiocatore(g, i === inTurno);
     const box = el('div', `avversario ${st.classe}`);
+    box.setAttribute('role', 'button');
+    box.setAttribute('aria-label', `${g.nome}: tocca per vedere le carte`);
     if (i === inTurno) box.classList.add('turno');
     if (v.vincitoreMano === i) box.classList.add('vincitore');
     const seduto = sedutoDi(i);
     const riga1 = el('div', 'riga');
     riga1.append(avatar(g.nome, postoDi(i), seduto && !connesso(seduto.ultimo_contatto) ? 'spento' : ''));
     const nome = el('span', 'nome', g.nome);
-    riga1.append(nome, el('span', `stato ${st.classe}`, st.testo));
+    riga1.append(nome);
+    // "aspetta" e "sta giocando" si capiscono già dal bordo: lo stato si scrive solo se dice qualcosa.
+    // Sballato si vede dalla sfera barrata, fuori mano dalla casella sbiadita: resta solo "fermo", come manina.
+    const fermo = st.classe === 'fermo';
+    // Le carte piccole si vedono toccando la casella (chi sta giocando le mostra già in grande al centro).
+    if (avversariAperti.has(i)) box.classList.add('aperto');
+    box.onclick = () => {
+      if (avversariAperti.has(i)) avversariAperti.delete(i); else avversariAperti.add(i);
+      box.classList.toggle('aperto');
+    };
     const riga2 = el('div', 'riga');
     const p = punti(g);
     const mini = el('div', 'carte-mini');
     g.inGioco.forEach((c, k) => mini.append(disegnaCarta(c.coperta ? null : c.carta, 'mini', { anima: animazioneCarta(v, i, k) })));
-    riga2.append(mini);
     if (p) riga2.append(sfera(g, 'piccola'));
+    if (fermo) {
+      const f = el('span', 'fermo-icona', '✋');
+      f.setAttribute('aria-label', 'fermo');
+      riga2.append(f);
+    }
     riga2.append(segnaliniPiccoli(g));
     box.append(riga1, riga2);
+    if (g.inGioco.length) box.append(mini);
     if (i === v.primoGiocatore) box.append(el('span', 'mazziere', '1°'));
     fila.append(box);
   }
@@ -716,7 +736,7 @@ function disegnaTavolo(s: Situazione) {
   } else if (inTurno !== null && inTurno === io) {
     centro.classList.add('compatto');
     const riga = el('p', 'tocca-riga');
-    riga.append(el('strong', 'tocca-a-te', 'Tocca a te!'), el('span', 'sotto-testo', suggerimento(v, mie)));
+    riga.append(el('span', 'sotto-testo', suggerimento(v, mie)));
     riflettore.append(riga);
     if (consiglio) riflettore.append(cartaParlante(consiglio));
   } else if (v.fase === 'moneta') {
@@ -729,7 +749,7 @@ function disegnaTavolo(s: Situazione) {
   centro.append(riflettore);
 
   const ultimo = v.registro[v.registro.length - 1];
-  if (ultimo) {
+  if (ultimo && inTurno !== io) {
     const cronaca = el('button', 'cronaca', ultimo.testo);
     cronaca.title = 'Apri la storia della partita';
     cronaca.onclick = () => { storiaAperta = true; disegna(); };
@@ -762,7 +782,7 @@ function disegnaTavolo(s: Situazione) {
     });
     if (consiglio && (consiglio.umore === 'lascia')) mio.classList.add('rischio-alto');
     if (g.inGioco.length === 0) carte.append(el('p', 'vuoto', g.esito === 'nonPartecipa' ? 'Questa mano la guardi da fuori' : 'Nessuna carta davanti a te'));
-    mio.append(testa, carte, misuratore(g, targhettaDaBattere(calcolaDaBattere(v, io), g.esito)));
+    mio.append(testa, carte, misuratore(g, targhettaDaBattere(calcolaDaBattere(v, io), g.punteggio > 9.5 && haNumeriche(g) ? 'sballato' : g.esito)));
     gioco.append(mio);
   }
 
@@ -819,6 +839,7 @@ function testoFase(v: VistaPartita, io: number | null): string {
 
 function suggerimento(v: VistaPartita, mie: AzionePermessa[]): string {
   if (v.turno?.deveRivelare) return 'Gira una delle tue carte coperte.';
+  if (mie.some((a) => a.tipo === 'rivela')) return mie.some((a) => a.tipo === 'fermati') ? 'Gira una carta coperta o fermati.' : 'Gira una carta coperta.';
   if (mie.some((a) => a.tipo === 'pesca' && a.obbligatoria)) {
     const n = v.turno!.pescateObbligatorie;
     return n === 1 ? 'Devi pescare ancora 1 carta.' : `Devi pescare ancora ${n} carte.`;
@@ -864,7 +885,10 @@ function disegnaAzioni(s: Situazione, v: VistaPartita, mie: AzionePermessa[], um
     if ((spingi && chiave === 'pesca') || (lascia && chiave === 'fermati')) b.classList.add('consigliato');
     tasti.append(b);
   };
-  msg.textContent = 'Tocca a te!';
+  // "Tocca a te!" lo dice già l'annuncio: qui si scrive cosa fare.
+  const puoiPescare = mie.some((a) => a.tipo === 'pesca' && !a.obbligatoria);
+  const puoiStare = mie.some((a) => a.tipo === 'fermati');
+  msg.textContent = puoiPescare && puoiStare ? 'Peschi o stai?' : puoiStare ? 'Puoi solo fermarti' : 'Tocca a te!';
   for (const a of mie) {
     switch (a.tipo) {
       case 'rivela':

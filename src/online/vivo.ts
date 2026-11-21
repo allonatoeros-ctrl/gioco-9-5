@@ -95,7 +95,8 @@ export function calcolaDaBattere(v: VistaPartita, io: number): DaBattere | null 
 /** La targhetta "Da battere: 7,5 (Luca)" accanto alla mia sfera. */
 export function targhettaDaBattere(d: DaBattere | null, mioEsito: GiocatoreVista['esito']) {
   const box = el('div', 'da-battere');
-  if (!d) return box;
+  // Se ho già sballato non c'è più niente da battere: si mostra solo la sfera.
+  if (!d || mioEsito === 'sballato') return box;
   if (d.stato === 'nessuno') {
     if (mioEsito === 'inTurno' || mioEsito === 'daGiocare') {
       box.classList.add('primo');
@@ -107,7 +108,7 @@ export function targhettaDaBattere(d: DaBattere | null, mioEsito: GiocatoreVista
   box.classList.add(d.stato);
   const titolo = d.stato === 'sopra' ? 'Sei in testa!' : d.stato === 'pari' ? 'Pari con' : 'Da battere';
   box.append(el('span', 'eti', titolo), el('strong', undefined, valoreTesto), el('span', 'chi', d.chi.join(', ')));
-  if (d.stato === 'pari' && mioEsito !== 'sballato') box.append(el('span', 'quanto', 'pari = moneta'));
+  if (d.stato === 'pari') box.append(el('span', 'quanto', 'pari = moneta'));
   return box;
 }
 
