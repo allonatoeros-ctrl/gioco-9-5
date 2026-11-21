@@ -127,7 +127,7 @@ export interface Consiglio {
 const TUTTE = creaMazzo();
 
 /** Stima a occhio: quante carte numeriche, tra quelle non ancora viste, mi farebbero sballare. */
-function stimaRischio(v: VistaPartita, io: number): number {
+export function stimaRischio(v: VistaPartita, io: number): number {
   const viste = new Set<number>();
   for (const g of v.giocatori) {
     for (const c of g.inGioco) if (!c.coperta) viste.add(c.carta.id);

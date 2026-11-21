@@ -9,6 +9,7 @@ import type { AzionePermessa, Evento } from '../engine';
 import type { VistaPartita, GiocatoreVista } from '../server/vista';
 import { illustrazione } from '../ui/illustrazioni';
 import { ClienteOnline, ErroreOnline, RichiestaMossa, Situazione } from './cliente';
+import { ClienteComputer, CODICE_COMPUTER } from './cliente-computer';
 import { calcolaDaBattere, cartaParlante, consiglia, lancioMoneta, moneta, sfera, targhettaDaBattere } from './vivo';
 
 const app = document.getElementById('app')!;
@@ -22,7 +23,15 @@ function vuoleFinto() {
 }
 type Cliente = Pick<ClienteOnline, 'accedi' | 'creaStanza' | 'entraInStanza' | 'esciDallaStanza' | 'ricominciaStanza' | 'leggiSituazione' | 'osservaStanza' | 'avvia' | 'inviaMossa'>;
 const finto = import.meta.env.DEV && vuoleFinto();
-const cliente: Cliente = finto ? new (await import('./cliente-finto')).ClienteFinto() : new ClienteOnline();
+const clienteOnline: Cliente = finto ? new (await import('./cliente-finto')).ClienteFinto() : new ClienteOnline();
+let cliente: Cliente = clienteOnline;
+/** Vero quando si gioca contro il computer (tutto nel telefono, senza server). */
+let controComputer = false;
+function usaComputer(c: ClienteComputer | null) {
+  controComputer = c !== null;
+  cliente = c ?? clienteOnline;
+  memoria.scrivi('modo', c ? 'computer' : null);
+}
 // Con il server finto ogni scheda è un giocatore diverso, quindi ognuna ha la sua memoria.
 const archivio = () => (finto ? sessionStorage : localStorage);
 
@@ -299,9 +308,66 @@ function mostraInizio(errore = '', codiceProposto = '') {
   riga.append(cod, entra);
 
   box.append(campoNome, err, crea, separatore, riga);
-  pagina.append(testa, box);
+  pagina.append(testa, box, pannelloComputer(leggiNome, err));
   app.append(pagina);
   if (codiceProposto && !nome.value) nome.focus();
+}
+
+/** Il riquadro "Gioca contro il computer" della pagina iniziale. */
+function pannelloComputer(leggiNome: () => string | null, err: HTMLElement) {
+  const box = el('div', 'pannello computer');
+  box.append(el('h3', undefined, '🤖 Gioca contro il computer'));
+  box.append(el('p', 'nota', 'Da solo, anche senza internet. Quanti avversari vuoi?'));
+  let avversari = Number(memoria.leggi('avversari')) || 1;
+  if (avversari < 1 || avversari > 5) avversari = 1;
+  let obiettivo: 3 | 5 | 7 = 5;
+  const chips = el('div', 'segmenti');
+  const sceltaObiettivo = el('div', 'obiettivo-computer');
+  const chipsOb = el('div', 'segmenti');
+  for (const o of [3, 5, 7] as const) {
+    const b = el('button', 'chip grande', `${o} ★`);
+    b.setAttribute('aria-label', `Si vince a ${o} segnalini`);
+    if (o === obiettivo) b.classList.add('attivo');
+    b.onclick = () => {
+      obiettivo = o;
+      chipsOb.querySelectorAll('.chip').forEach((x) => x.classList.toggle('attivo', x === b));
+    };
+    chipsOb.append(b);
+  }
+  sceltaObiettivo.append(el('p', 'nota', 'Si vince a…'), chipsOb);
+  const gioca = el('button', 'tasto primario grande', '');
+  const aggiorna = () => {
+    chips.querySelectorAll('.chip').forEach((x, k) => x.classList.toggle('attivo', k + 1 === avversari));
+    // Con 4 o più giocatori (3 computer o più) si gioca a obiettivo punti.
+    sceltaObiettivo.hidden = avversari < 3;
+    gioca.textContent = avversari === 1 ? 'Gioca contro il computer' : `Gioca contro ${avversari} computer`;
+  };
+  for (let n = 1; n <= 5; n++) {
+    const b = el('button', 'chip grande', String(n));
+    b.setAttribute('aria-label', `${n} ${n === 1 ? 'avversario' : 'avversari'}`);
+    b.onclick = () => { avversari = n; memoria.scrivi('avversari', String(n)); aggiorna(); };
+    chips.append(b);
+  }
+  aggiorna();
+  gioca.onclick = async () => {
+    const n = leggiNome();
+    if (!n) return;
+    gioca.disabled = true;
+    gioca.classList.add('attesa');
+    try {
+      const c = new ClienteComputer();
+      await c.creaStanza(n, avversari);
+      await c.avvia(CODICE_COMPUTER, obiettivo);
+      usaComputer(c);
+      apriStanza(CODICE_COMPUTER);
+    } catch (e) {
+      err.textContent = messaggio(e);
+      gioca.disabled = false;
+      gioca.classList.remove('attesa');
+    }
+  };
+  box.append(chips, sceltaObiettivo, gioca);
+  return box;
 }
 
 // ---------------------------------------------------------------------------
@@ -315,8 +381,8 @@ function apriStanza(c: string) {
   ultimoEventoVisto = null;
   cartePrima = null;
   turnoPrima = null;
-  memoria.scrivi('stanza', c);
-  history.replaceState(null, '', `?stanza=${c}`);
+  memoria.scrivi('stanza', controComputer ? null : c);
+  history.replaceState(null, '', controComputer ? location.pathname : `?stanza=${c}`);
   app.replaceChildren(caricamento('Entro nella stanza…'));
   smettiDiAscoltare = cliente.osservaStanza(
     c,
@@ -346,6 +412,7 @@ function esciDallaStanza(errore = '') {
   situazione = null;
   memoria.scrivi('stanza', null);
   history.replaceState(null, '', location.pathname);
+  usaComputer(null);
   mostraInizio(errore);
 }
 
@@ -392,7 +459,7 @@ function disegnaConfermaUscita(partitaInCorso: boolean) {
   box.setAttribute('aria-label', 'Vuoi uscire?');
   box.append(el('h2', undefined, partitaInCorso ? 'Vuoi uscire dalla partita?' : 'Vuoi uscire dalla stanza?'));
   box.append(el('p', undefined, partitaInCorso
-    ? 'La partita si interrompe per tutti e torni alla pagina iniziale.'
+    ? (controComputer ? 'La partita contro il computer finisce e torni alla pagina iniziale.' : 'La partita si interrompe per tutti e torni alla pagina iniziale.')
     : 'Torni alla pagina iniziale. Potrai rientrare con il codice.'));
   const si = el('button', 'tasto caldo grande', 'Sì, esci');
   si.onclick = () => void esciETornaAllInizio(si);
@@ -1067,16 +1134,20 @@ async function invia(mossa: RichiestaMossa, chiave: string) {
 // ---------------------------------------------------------------------------
 
 async function avvio() {
+  const dalLinkStanza = new URLSearchParams(location.search).has('stanza');
+  // C'era una partita contro il computer a metà: si riprende da lì (anche senza internet).
+  if (!dalLinkStanza && memoria.leggi('modo') === 'computer' && ClienteComputer.esiste()) {
+    usaComputer(new ClienteComputer());
+    apriStanza(CODICE_COMPUTER);
+    return;
+  }
+  usaComputer(null);
   app.replaceChildren(caricamento('Collegamento…'));
   try {
     await cliente.accedi();
   } catch (e) {
-    const box = caricamento('');
-    box.replaceChildren(el('p', 'errore', `Non riesco a collegarmi al server: ${messaggio(e)}`));
-    const riprova = el('button', 'tasto primario', 'Riprova');
-    riprova.onclick = () => location.reload();
-    box.append(riprova);
-    app.replaceChildren(box);
+    // Senza server si può comunque giocare contro il computer.
+    mostraInizio(`Non riesco a collegarmi al server (${messaggio(e)}). Puoi comunque giocare contro il computer.`);
     return;
   }
   const dalLink = new URLSearchParams(location.search).get('stanza')?.toUpperCase() ?? null;

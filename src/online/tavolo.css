@@ -501,3 +501,10 @@ input { font: inherit; }
 .conferma .tasto.leggero { color: var(--muto-foglio); }
 .conferma .corona { font-size: 3rem; animation: none; }
 .conferma .errore:empty, .podio .errore:empty { display: none; }
+
+/* Gioca contro il computer (pagina iniziale) */
+.pannello.computer { gap: 10px; }
+.pannello.computer h3 { color: var(--testo); font-size: 1.05rem; text-align: center; }
+.pannello.computer .nota { margin: 0; }
+.obiettivo-computer { display: flex; flex-direction: column; gap: 6px; }
+.obiettivo-computer[hidden] { display: none; }
