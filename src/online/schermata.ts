@@ -10,7 +10,10 @@ import type { VistaPartita, GiocatoreVista } from '../server/vista';
 import { illustrazione } from '../ui/illustrazioni';
 import { ClienteOnline, ErroreOnline, RichiestaMossa, Situazione } from './cliente';
 import { ClienteComputer, CODICE_COMPUTER } from './cliente-computer';
+import { registraServiceWorker } from '../app/installa';
 import { calcolaDaBattere, cartaParlante, consiglia, lancioMoneta, moneta, sfera, targhettaDaBattere } from './vivo';
+
+registraServiceWorker();
 
 const app = document.getElementById('app')!;
 // Con `npm run avvia` e ?finto nell'indirizzo si usa un server finto nel browser (solo per provare).
@@ -1168,7 +1171,12 @@ async function avvio() {
   usaComputer(null);
   app.replaceChildren(caricamento('Collegamento…'));
   try {
-    await cliente.accedi();
+    // Senza internet (o con la rete che non risponde) non si resta fermi su "Collegamento…".
+    if (navigator.onLine === false) throw new Error('sei senza internet');
+    await Promise.race([
+      cliente.accedi(),
+      new Promise((_, rifiuta) => setTimeout(() => rifiuta(new Error('la rete non risponde')), 10000)),
+    ]);
   } catch (e) {
     // Senza server si può comunque giocare contro il computer.
     mostraInizio(`Non riesco a collegarmi al server (${messaggio(e)}). Puoi comunque giocare contro il computer.`);
