@@ -951,8 +951,45 @@ function comeImmagine(svg: string): string {
   return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(vesteNotteEOro(svg));
 }
 
+/** Le immagini già pronte: si preparano una volta sola, poi il telefono le riusa. */
+const pronte = new Map<string, string>();
+
 /** Illustrazione di una carta, se esiste; altrimenti la carta si mostra col solo nome. */
 export function illustrazione(carta: Carta): string | undefined {
+  const chiave = carta.tipo === 'numero' ? String(carta.valore) : carta.tipo;
+  const gia = pronte.get(chiave);
+  if (gia) return gia;
   const svg = carta.tipo === 'numero' ? NUMERI[String(carta.valore)] : SPECIALI[carta.tipo];
-  return svg ? comeImmagine(svg) : undefined;
+  if (!svg) return undefined;
+  const url = comeImmagine(svg);
+  pronte.set(chiave, url);
+  return url;
+}
+
+/** Tenute in memoria perché il telefono non debba ridisegnarle da capo a ogni mossa. */
+const giaDecodificate: HTMLImageElement[] = [];
+
+/**
+ * Prepara in anticipo tutte le illustrazioni, una alla volta e quando il telefono
+ * non ha altro da fare: così, quando una carta si gira, il disegno è già pronto.
+ */
+export function preparaIllustrazioni() {
+  if (typeof Image === 'undefined') return;
+  const chiavi = [...Object.keys(NUMERI).map((v) => ({ tipo: 'numero', valore: Number(v) })), ...Object.keys(SPECIALI).map((t) => ({ tipo: t }))];
+  const quandoLibero = (f: () => void) => {
+    const w = window as unknown as { requestIdleCallback?: (cb: () => void) => void };
+    if (w.requestIdleCallback) w.requestIdleCallback(f); else setTimeout(f, 50);
+  };
+  const prossima = () => {
+    const c = chiavi.shift();
+    if (!c) return;
+    const url = illustrazione(c as unknown as Carta);
+    if (url) {
+      const img = new Image();
+      img.src = url;
+      giaDecodificate.push(img);
+      img.decode().catch(() => {}).finally(() => quandoLibero(prossima));
+    } else quandoLibero(prossima);
+  };
+  quandoLibero(prossima);
 }

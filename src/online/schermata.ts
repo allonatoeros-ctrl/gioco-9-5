@@ -7,7 +7,7 @@ import './tavolo.css';
 import { Carta, eNumerica, nomeCarta } from '../engine';
 import type { AzionePermessa, Evento } from '../engine';
 import type { VistaPartita, GiocatoreVista } from '../server/vista';
-import { illustrazione } from '../ui/illustrazioni';
+import { illustrazione, preparaIllustrazioni } from '../ui/illustrazioni';
 import { ClienteOnline, ErroreOnline, RichiestaMossa, Situazione } from './cliente';
 import { ClienteComputer, CODICE_COMPUTER } from './cliente-computer';
 import { registraServiceWorker } from '../app/installa';
@@ -16,6 +16,7 @@ import { crepa, faccia, pioggiaDiMonete } from './festa';
 import { calcolaDaBattere, cartaParlante, consiglia, lancioMoneta, moneta, sfera, targhettaDaBattere } from './vivo';
 
 registraServiceWorker();
+preparaIllustrazioni();
 
 const app = document.getElementById('app')!;
 // Con `npm run avvia` e ?finto nell'indirizzo si usa un server finto nel browser (solo per provare).

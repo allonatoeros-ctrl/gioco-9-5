@@ -30,7 +30,7 @@ function pocoMovimento() {
 }
 
 /** Pioggia di monete d'oro su tutto lo schermo (per chi vince la mano o fa 9½). */
-export function pioggiaDiMonete(quante = 26) {
+export function pioggiaDiMonete(quante = 16) {
   if (pocoMovimento()) return;
   const cielo = document.createElement('div');
   cielo.className = 'pioggia-monete';
@@ -38,7 +38,6 @@ export function pioggiaDiMonete(quante = 26) {
   for (let k = 0; k < quante; k++) {
     const m = document.createElement('span');
     m.className = 'moneta-cade';
-    m.textContent = '★';
     m.style.left = `${Math.random() * 100}%`;
     m.style.setProperty('--ritardo', `${Math.random() * 0.6}s`);
     m.style.setProperty('--durata', `${1.4 + Math.random() * 0.9}s`);
