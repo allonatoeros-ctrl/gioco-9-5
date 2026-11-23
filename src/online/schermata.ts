@@ -11,6 +11,7 @@ import { illustrazione } from '../ui/illustrazioni';
 import { ClienteOnline, ErroreOnline, RichiestaMossa, Situazione } from './cliente';
 import { ClienteComputer, CODICE_COMPUTER } from './cliente-computer';
 import { registraServiceWorker } from '../app/installa';
+import { apriGuida } from './guida';
 import { calcolaDaBattere, cartaParlante, consiglia, lancioMoneta, moneta, sfera, targhettaDaBattere } from './vivo';
 
 registraServiceWorker();
@@ -216,6 +217,22 @@ function animazioneCarta(v: VistaPartita, gi: number, k: number): 'entra' | 'gir
 }
 
 // ---------------------------------------------------------------------------
+// Guida "Come si gioca"
+// ---------------------------------------------------------------------------
+
+/** Apre la guida. Con `provaComputer` l'ultima scheda propone di provare contro il computer. */
+function mostraGuida(provaComputer?: () => void) {
+  memoria.scrivi('guida-vista', '1');
+  apriGuida({ disegnaCarta: (c, t) => disegnaCarta(c, t), provaComputer });
+}
+
+function bottoneGuida(provaComputer?: () => void) {
+  const b = el('button', 'tasto leggero link-guida', '❓ Come si gioca');
+  b.onclick = () => mostraGuida(provaComputer);
+  return b;
+}
+
+// ---------------------------------------------------------------------------
 // Pagina iniziale
 // ---------------------------------------------------------------------------
 
@@ -313,9 +330,18 @@ function mostraInizio(errore = '', codiceProposto = '') {
   riga.append(cod, entra);
 
   box.append(campoNome, err, crea, separatore, riga);
-  pagina.append(testa, box, pannelloComputer(leggiNome, err));
+  const computer = pannelloComputer(leggiNome, err);
+  // Dalla guida si può passare subito a una partita di prova contro il computer.
+  const provaComputer = () => {
+    computer.classList.remove('chiuso');
+    computer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (!nome.value.trim()) nome.focus();
+  };
+  pagina.append(testa, box, computer, bottoneGuida(provaComputer));
   app.append(pagina);
   if (codiceProposto && !nome.value) nome.focus();
+  // La prima volta la guida si apre da sola (non a chi arriva con il link di un amico: lui deve solo entrare).
+  if (!memoria.leggi('guida-vista') && !codiceProposto && !errore) mostraGuida(provaComputer);
 }
 
 /** Il riquadro "Gioca contro il computer" della pagina iniziale. */
@@ -550,6 +576,28 @@ function disegnaAttesa(s: Situazione) {
   }
   posti.append(griglia);
   pagina.append(posti);
+
+  // Da soli la partita non parte: lo si dice chiaro, con i passi da fare.
+  if (s.giocatori.length < 2) {
+    const come = el('div', 'pannello come-invitare');
+    come.append(el('h3', undefined, 'Sei solo nella stanza: invita qualcuno!'));
+    const passi = el('ol', 'guida-passi');
+    const righe: [string, string, string][] = [
+      ['Tocca ', 'Invita gli amici', ' e manda il link nella chat (WhatsApp, Telegram…).'],
+      ['Gli amici toccano il link ed entrano qui. Oppure scrivono il codice ', s.stanza.codice, ' nella pagina iniziale.'],
+      ['Quando c\'è almeno un amico, tocca ', 'Inizia la partita', '.'],
+    ];
+    for (const [a, b, c] of righe) {
+      const li = el('li');
+      const testo = el('p');
+      testo.append(document.createTextNode(a), el('strong', undefined, b), document.createTextNode(c));
+      li.append(testo);
+      passi.append(li);
+    }
+    come.append(passi);
+    pagina.append(come);
+  }
+  pagina.append(bottoneGuida());
 
   const err = el('div', 'errore', avviso);
   err.setAttribute('role', 'alert');
@@ -968,7 +1016,7 @@ function disegnaStoria(v: VistaPartita) {
     confermaUscita = true;
     disegna();
   };
-  foglio.append(testa, lista, info, esci);
+  foglio.append(testa, lista, info, bottoneGuida(), esci);
   velo.append(foglio);
   setTimeout(() => (lista.scrollTop = lista.scrollHeight));
   return velo;
