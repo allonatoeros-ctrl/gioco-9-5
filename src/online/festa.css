@@ -70,3 +70,25 @@ body.scossa .gioco { animation: scossa .45s linear; will-change: translate; }
 @media (prefers-reduced-motion: reduce) {
   .pioggia-monete, .crepa-schermo { display: none; }
 }
+
+/* ---------- fluidità sui telefoni ----------
+   Le animazioni che non si fermano mai muovono solo posizione, rotazione,
+   grandezza e trasparenza: il telefono le fa senza ridisegnare niente.
+   Prima alcune facevano "pulsare" ombre e aloni, che vanno ridisegnati a ogni
+   fotogramma (fino a 60 volte al secondo per ogni carta o sfera). */
+
+/* Carte da girare o da scegliere: alone d'oro fisso, si muovono soltanto. */
+.carta.da-girare { box-shadow: 0 0 0 3px var(--oro), 0 0 16px 4px rgb(240 207 122 / .55); animation: dondola 2.4s ease-in-out infinite; will-change: transform; }
+.carta.sceglibile { box-shadow: 0 0 0 3px var(--oro), 0 0 16px 4px rgb(240 207 122 / .55); animation: invito 1.4s ease-in-out infinite; will-change: transform; }
+.mio-turno .carte-mie .carta, .carta-parlante .faccia { will-change: transform; }
+
+/* Sfere: l'alone è un livello a parte che si accende e si spegne. */
+.sfera.calda .globo { animation: none; }
+.sfera.perfetta { animation: none; }
+.sfera.calda::after, .sfera.perfetta::after {
+  content: ''; position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+  box-shadow: 0 0 16px 5px rgb(255 140 60 / .6); opacity: 0; will-change: opacity;
+  animation: alone 1.6s ease-in-out infinite;
+}
+.sfera.perfetta::after { box-shadow: 0 0 18px 7px var(--oro); animation-duration: 1.2s; }
+@keyframes alone { 50% { opacity: 1; } }
