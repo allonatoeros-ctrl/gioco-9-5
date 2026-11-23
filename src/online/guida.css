@@ -1,0 +1,52 @@
+/* "Come si gioca": schede da scorrere col dito, sopra la pagina. */
+.guida-velo { z-index: 40; }
+.guida { max-width: 420px; padding: 14px 0 12px; gap: 8px; text-align: left; max-height: calc(100dvh - 32px); }
+.guida-testa { display: flex; align-items: center; justify-content: space-between; padding: 0 14px; }
+.guida-etichetta { font-size: .75rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--muto-foglio); }
+.guida .tasto-icona { color: var(--testo-foglio); border-color: rgb(127 127 127 / .3); background: transparent; }
+
+.guida-nastro {
+  display: flex; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none;
+  overscroll-behavior-x: contain; flex: 1; min-height: 0;
+}
+.guida-nastro::-webkit-scrollbar { display: none; }
+.guida-scheda {
+  flex: 0 0 100%; scroll-snap-align: center; scroll-snap-stop: always; overflow-y: auto;
+  padding: 4px 18px 6px; display: flex; flex-direction: column; gap: 10px; min-height: 340px;
+}
+.guida-scheda h2 { font-family: var(--font-titolo); font-size: 1.6rem; color: var(--oro); text-align: center; }
+[data-stile="fumetto"] .guida-scheda h2 { color: var(--testo-foglio); }
+.guida-scheda p { margin: 0; color: var(--testo-foglio); line-height: 1.4; }
+.guida-scheda strong { color: var(--oro); }
+[data-stile="osteria"] .guida-scheda strong, [data-stile="fumetto"] .guida-scheda strong { color: #b3401d; }
+.guida-scheda .guida-piccolo { color: var(--muto-foglio); font-size: .88rem; }
+
+.guida-carte { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 6px 0; }
+.guida-segno { font-size: 1.6rem; font-weight: 800; color: var(--muto-foglio); }
+.guida-punti { font-family: var(--font-titolo); font-size: 2.6rem; font-weight: 800; color: var(--oro); }
+.guida-stella { font-size: 4rem; line-height: 1; text-align: center; color: var(--oro); text-shadow: 0 3px 0 rgb(0 0 0 / .25); padding: 4px 0; }
+
+.guida-passi { margin: 0; padding: 0; list-style: none; counter-reset: passo; display: flex; flex-direction: column; gap: 10px; }
+.guida-passi li { counter-increment: passo; display: flex; gap: 10px; align-items: flex-start; line-height: 1.4; }
+.guida-passi li::before {
+  content: counter(passo); flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--oro); color: #2a1d05; font-weight: 800; font-size: .85rem;
+}
+
+.guida-speciali { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.guida-speciali li { display: flex; gap: 10px; align-items: center; }
+.guida-speciali .carta.media { --w: 40px; }
+.guida-speciali p { font-size: .9rem; }
+
+.guida-puntini { display: flex; justify-content: center; gap: 8px; padding: 2px 0; }
+.guida-pallino { width: 10px; height: 10px; border-radius: 50%; border: none; padding: 0; background: rgb(127 127 127 / .4); cursor: pointer; transition: width .2s, background .2s; }
+.guida-pallino.attivo { width: 24px; border-radius: 6px; background: var(--oro); }
+.guida-tasti { display: flex; flex-direction: column; gap: 8px; padding: 0 14px; }
+.guida .tasto.secondario { color: var(--testo-foglio); border-color: var(--oro); }
+
+/* Sala d'attesa quando si è soli: cosa fare, passo per passo. */
+.come-invitare .guida-passi li { color: var(--testo); }
+.come-invitare strong { color: var(--oro); }
+.come-invitare h3 { color: var(--testo); }
+.link-guida { align-self: center; }
+.guida-passi li p { margin: 0; flex: 1; min-width: 0; }
