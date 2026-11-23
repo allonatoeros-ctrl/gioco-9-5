@@ -12,7 +12,8 @@ import { ClienteOnline, ErroreOnline, RichiestaMossa, Situazione } from './clien
 import { ClienteComputer, CODICE_COMPUTER } from './cliente-computer';
 import { registraServiceWorker } from '../app/installa';
 import { apriGuida } from './guida';
-import { crepa, faccia, pioggiaDiMonete } from './festa';
+import { crepa, faccia, moneteNelSalvadanaio, pioggiaDiMonete, segnalinoVola } from './festa';
+import { impostaSuoni, suona, suoniAccesi } from './suoni';
 import { calcolaDaBattere, cartaParlante, consiglia, lancioMoneta, moneta, sfera, targhettaDaBattere } from './vivo';
 
 registraServiceWorker();
@@ -169,7 +170,7 @@ function disegnaCarta(carta: Carta | null, taglia: Taglia, opz: { fattore?: numb
       c.append(el('span', 'fattore', opz.fattore === 0.5 ? '×½' : `×${fmt(opz.fattore)}`));
     }
   }
-  if (opz.anima) c.classList.add(`anima-${opz.anima}`);
+  if (opz.anima) { c.classList.add(`anima-${opz.anima}`); suona('carta'); }
   if (opz.gira) {
     // Carta coperta da girare: basta toccarla.
     const gira = opz.gira;
@@ -186,8 +187,9 @@ function disegnaCarta(carta: Carta | null, taglia: Taglia, opz: { fattore?: numb
     c.tabIndex = 0;
     c.setAttribute('role', 'button');
     c.title = 'Tocca per tenerla come segnalino';
-    c.onclick = opz.scegli;
-    c.onkeydown = (ev) => { if (ev.key === 'Enter' || ev.key === ' ') opz.scegli!(); };
+    const scegli = opz.scegli;
+    c.onclick = () => { segnalinoVola(c); scegli(); };
+    c.onkeydown = (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { segnalinoVola(c); scegli(); } };
   }
   return c;
 }
@@ -1020,7 +1022,13 @@ function disegnaStoria(v: VistaPartita) {
     confermaUscita = true;
     disegna();
   };
-  foglio.append(testa, lista, info, bottoneGuida(), esci);
+  const suoni = el('button', 'tasto secondario', suoniAccesi() ? '🔊 Suoni: accesi' : '🔇 Suoni: spenti');
+  suoni.onclick = () => {
+    impostaSuoni(!suoniAccesi());
+    suoni.textContent = suoniAccesi() ? '🔊 Suoni: accesi' : '🔇 Suoni: spenti';
+    suona('moneta');
+  };
+  foglio.append(testa, lista, info, suoni, bottoneGuida(), esci);
   velo.append(foglio);
   setTimeout(() => (lista.scrollTop = lista.scrollHeight));
   return velo;
@@ -1117,8 +1125,13 @@ function mostraAnnunci() {
   if (a.sotto) box.append(el('span', undefined, a.sotto));
   document.body.append(box);
   if (a.tono === 'oro' || a.tono === 'nove') vibra([40, 60, 40]);
-  if (a.festa === 'monete') pioggiaDiMonete();
-  if (a.festa === 'crepa') { crepa(); vibra([60, 30, 120]); }
+  if (a.festa === 'monete') {
+    pioggiaDiMonete();
+    suona('vittoria');
+    setTimeout(() => suona('monete'), 250);
+    setTimeout(() => moneteNelSalvadanaio(), 700);
+  }
+  if (a.festa === 'crepa') { crepa(); suona('crack'); vibra([60, 30, 120]); }
   setTimeout(() => {
     box.classList.add('via');
     setTimeout(() => {
