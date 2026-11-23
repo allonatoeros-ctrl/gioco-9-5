@@ -194,8 +194,6 @@ input { font: inherit; }
 .riga-codice { display: flex; gap: 8px; }
 .riga-codice input.codice { flex: 1; min-width: 0; text-transform: uppercase; letter-spacing: .35em; text-align: center; font-weight: 800; font-size: 1.3rem; }
 .riga-codice .tasto { flex: none; padding-inline: 1.4rem; }
-.scelta-stile { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: center; color: var(--muto); font-size: .85rem; }
-.scelta-stile .chip { color: var(--testo); }
 
 .titolo-pagina { font-family: var(--font-titolo); font-size: 1.8rem; text-align: center; padding-top: 4px; }
 .biglietto { align-items: center; text-align: center; }
@@ -251,18 +249,6 @@ input { font: inherit; }
 .carta.grande { --w: 96px; }
 .carta img { width: 100%; height: 100%; display: block; pointer-events: none; }
 [data-stile="fumetto"] .carta { outline: 2px solid #2a1d14; }
-.carta.coperta {
-  background:
-    radial-gradient(circle at 50% 50%, transparent 36%, rgb(0 0 0 / .0) 37%),
-    repeating-linear-gradient(45deg, var(--dorso1) 0 6px, var(--dorso2) 6px 12px);
-  border: calc(var(--w) * .06) solid #fffdf5;
-}
-.carta.coperta .dorso-logo {
-  font-family: Georgia, serif; font-weight: 800; color: var(--dorso-segno);
-  font-size: calc(var(--w) * .32); text-shadow: 0 1px 0 rgb(0 0 0 / .4);
-  border: 2px solid var(--dorso-segno); border-radius: 50%; width: 70%; aspect-ratio: 1; display: grid; place-items: center;
-}
-.carta.mini.coperta .dorso-logo { border: none; font-size: 9px; }
 .carta.mini.coperta { border-width: 2px; }
 .carta.vuota { background: transparent; border: 2px dashed var(--bordo-pannello); box-shadow: none; outline: none; }
 .carta .valore { font-family: Georgia, serif; font-weight: 800; color: #b3401d; font-size: calc(var(--w) * .42); line-height: 1; }
@@ -271,9 +257,8 @@ input { font: inherit; }
 .carta.mini .valore { font-size: 14px; }
 .carta.mini.solo-speciale .valore { font-size: 10px; letter-spacing: -.03em; }
 .carta .fattore { position: absolute; bottom: 4px; right: 4px; background: var(--rosso); color: #fff; font-weight: 800; font-size: .75rem; border-radius: 6px; padding: 1px 5px; }
-.carta.sceglibile { cursor: pointer; animation: pulsa-oro 1.2s ease-in-out infinite; }
+.carta.sceglibile { cursor: pointer; }
 .carta.sceglibile:active { transform: scale(.95); }
-@keyframes pulsa-oro { 0%, 100% { box-shadow: 0 0 0 3px var(--oro), 0 0 0 0 var(--oro); } 50% { box-shadow: 0 0 0 3px var(--oro), 0 0 18px 6px var(--oro); } }
 
 .anima-entra { animation: carta-entra .45s cubic-bezier(.2, .9, .3, 1.15) both; }
 .anima-gira { animation: carta-gira .5s ease-out both; }
@@ -334,9 +319,7 @@ input { font: inherit; }
 .riflettore .chi .avatar { width: 26px; height: 26px; font-size: .8rem; animation: respira 1.4s ease-in-out infinite; }
 .carte-riflettore { display: flex; gap: 6px; flex-wrap: nowrap; overflow-x: auto; padding: 4px 2px; scrollbar-width: none; }
 .grande-testo { margin: 0; font-family: var(--font-titolo); font-size: 1.5rem; line-height: 1.15; }
-.tocca-a-te { color: var(--oro); font-size: 1.8rem; animation: salta .6s cubic-bezier(.2, .9, .3, 1.4) both; }
-[data-stile="fumetto"] .tocca-a-te { color: var(--primario); -webkit-text-stroke: 1px #2a1d14; text-shadow: 3px 3px 0 #2a1d14; }
-.sotto-testo { margin: 0; color: var(--muto); font-size: .9rem; }
+[data-stile="fumetto"] .sotto-testo { margin: 0; color: var(--muto); font-size: .9rem; }
 .cronaca {
   grid-column: 1 / -1; text-align: left; border: none; cursor: pointer; font-size: .85rem; color: var(--muto);
   background: var(--pannello); padding: 6px 10px; border-radius: 10px; animation: compare .3s ease both;
@@ -345,15 +328,6 @@ input { font: inherit; }
 .cronaca::before { content: '📜 '; }
 
 .misuratore { display: flex; align-items: center; gap: 8px; min-height: 22px; }
-.misuratore .barra { flex: 1; height: 8px; border-radius: 99px; background: rgb(0 0 0 / .25); overflow: hidden; }
-[data-stile="fumetto"] .misuratore .barra { border: 2px solid #2a1d14; height: 12px; background: #fff; }
-.misuratore .pieno { height: 100%; border-radius: inherit; transition: width .5s cubic-bezier(.2, .9, .3, 1); }
-.misuratore .pieno.ok { background: var(--ok); }
-.misuratore .pieno.caldo { background: var(--caldo); }
-.misuratore .pieno.rosso { background: var(--rosso); }
-.etichetta-punti { white-space: nowrap; font-size: .85rem; color: var(--muto); }
-.etichetta-punti strong { font-family: Georgia, serif; font-size: 1.35rem; color: var(--testo); }
-.misuratore.sballato .etichetta-punti { color: var(--rosso); font-weight: 800; }
 .misuratore.sballato { animation: trema .4s ease; }
 
 .mio {
@@ -402,9 +376,7 @@ input { font: inherit; }
 .storia li.sezione { font-weight: 800; color: var(--muto-foglio); text-transform: uppercase; font-size: .75rem; letter-spacing: .1em; border: none; padding-top: 14px; }
 .storia li.ev-fineMano, .storia li.ev-finePartita, .storia li.ev-segnalino { font-weight: 800; }
 .storia li.ev-sballo { color: #c0392b; }
-.foglio .nota, .foglio .scelta-stile { color: var(--muto-foglio); }
-.foglio .scelta-stile .chip { color: var(--testo-foglio); border-color: rgb(127 127 127 / .35); background: transparent; }
-.foglio .scelta-stile .chip.attivo { background: var(--oro); color: #2a1d05; }
+.foglio .nota { color: var(--muto-foglio); }
 
 /* ---------- annunci grandi ---------- */
 .annuncio {
@@ -478,19 +450,10 @@ input { font: inherit; }
 .centro-tavolo.compatto { grid-template-columns: 1fr; padding: 8px 12px; }
 .centro-tavolo.compatto .mazzo { display: none; }
 .tocca-riga { margin: 0; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
-.centro-tavolo.compatto .tocca-a-te { font-family: var(--font-titolo); font-size: 1.5rem; }
-.info-mano { white-space: nowrap; min-width: 0; overflow: hidden; }
-[data-stile="fumetto"] .centro-tavolo.compatto .tocca-a-te { -webkit-text-stroke: 0; text-shadow: 2px 2px 0 #2a1d14; }
-[data-stile="fumetto"] .carta.mini { outline-width: 1.5px; }
+.centro-tavolo.compatto .info-mano { white-space: nowrap; min-width: 0; overflow: hidden; }
+[data-stile="fumetto"] .centro-tavolo.compatto [data-stile="fumetto"] .carta.mini { outline-width: 1.5px; }
 .tasto.secondario.attesa::after, .tasto.leggero.attesa::after { border-color: var(--su-secondario) transparent var(--su-secondario) transparent; }
 
-/* ---------- uscire dalla partita ---------- */
-.tasto-esci {
-  flex: none; min-height: 44px; padding: 0 14px; border-radius: 999px; cursor: pointer;
-  border: 2px solid var(--bordo-pannello); background: var(--pannello); color: inherit; font-weight: 700; font-size: .9rem;
-}
-.tasto-esci.attesa { opacity: .5; }
-[data-stile="fumetto"] .tasto-esci { border: 3px solid #2a1d14; }
 .velo.centrato { align-items: center; padding: 16px; }
 .conferma {
   width: 100%; max-width: 380px; background: var(--foglio); color: var(--testo-foglio); text-align: center;
