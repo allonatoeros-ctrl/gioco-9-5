@@ -932,8 +932,23 @@ const SPECIALI: Record<string, string> = {
   piu1: PIU_1, piu2: PIU_2, cambioTetta: CAMBIO_TETTA, stop: STOP, giocoliere: GIOCOLIERE, tagliatette: TAGLIATETTE,
 };
 
+/**
+ * Veste "notte e oro": il bordo esterno diventa blu notte, la cornice e la
+ * targhetta del nome diventano oro, i numeri blu notte. Il disegno dentro non cambia.
+ * I file da stampare in grafica/ restano com'erano (crema e verde).
+ */
+function vesteNotteEOro(svg: string): string {
+  return svg
+    .replace('fill="#fffdf5" stroke="#c9c2a8" stroke-width="6"', 'fill="#0f1a36" stroke="#d6af55" stroke-width="6"')
+    .replaceAll('rx="20" fill="none" stroke="#1f5d3a" stroke-width="4"', 'rx="20" fill="none" stroke="#d6af55" stroke-width="7"')
+    .replaceAll('rx="10" fill="#1f5d3a"', 'rx="10" fill="#1b2a55" stroke="#d6af55" stroke-width="3"')
+    .replaceAll('font-weight="700" fill="#b3401d"', 'font-weight="700" fill="#1b2a55"')
+    .replaceAll('font-weight="700" font-size="44" fill="#b3401d"', 'font-weight="700" font-size="44" fill="#1b2a55"')
+    .replaceAll('font-weight="700" font-size="54" fill="#b3401d"', 'font-weight="700" font-size="54" fill="#1b2a55"');
+}
+
 function comeImmagine(svg: string): string {
-  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(vesteNotteEOro(svg));
 }
 
 /** Illustrazione di una carta, se esiste; altrimenti la carta si mostra col solo nome. */

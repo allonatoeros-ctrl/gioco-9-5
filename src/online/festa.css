@@ -1,0 +1,74 @@
+/* ---------- grafica notte e oro: carte, dorso, facce, momenti grandi ---------- */
+
+/* Carte illustrate: angoli blu notte come la nuova cornice. */
+.carta.illustrata { background: #0f1a36; }
+
+/* Dorso disegnato: blu notte, puntini d'oro, cornice doppia e medaglione 9½. */
+.carta.coperta {
+  border: none;
+  background:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 140' preserveAspectRatio='none'><rect x='5' y='5' width='90' height='130' rx='7' fill='none' stroke='%23d6af55' stroke-width='1.8'/><rect x='8.5' y='8.5' width='83' height='123' rx='5' fill='none' stroke='%23d6af55' stroke-width='.6'/><path d='M50 36 l3 4 -3 4 -3 -4z M50 96 l3 4 -3 4 -3 -4z' fill='%23d6af55'/></svg>") center / 100% 100% no-repeat,
+    radial-gradient(circle at 50% 50%, rgb(214 175 85 / .55) 0 1px, transparent 1.6px) 0 0 / 10px 10px,
+    radial-gradient(circle at 50% 50%, transparent 0 3px, rgb(214 175 85 / .35) 3.4px 3.9px, transparent 4.3px) 0 0 / 10px 10px,
+    radial-gradient(ellipse at 50% 45%, #263a75, #0d1630 75%);
+}
+.carta.coperta .dorso-logo {
+  width: 52%; color: #f0cf7a; background: #0d1630; border: 2px solid #d6af55;
+  box-shadow: 0 0 0 3px #0d1630, 0 0 0 4px rgb(214 175 85 / .6);
+  font-size: calc(var(--w) * .2);
+}
+.carta.mini.coperta { background: radial-gradient(ellipse at 50% 45%, #263a75, #0d1630 75%); box-shadow: inset 0 0 0 1.5px #d6af55; }
+.carta.mini.coperta .dorso-logo { box-shadow: none; border: none; background: none; width: auto; font-size: 9px; }
+.carta-parlante .faccia { background: radial-gradient(ellipse at 50% 45%, #263a75, #0d1630 75%); border: 2px solid #d6af55; }
+
+/* Facce al posto delle iniziali. */
+.avatar.con-faccia { font-size: 1.3em; text-shadow: none; line-height: 1; }
+.avversario .avatar.con-faccia { font-size: 1rem; }
+.riflettore .chi .avatar.con-faccia { font-size: .95rem; }
+
+/* Pioggia di monete. */
+.pioggia-monete { position: fixed; inset: 0; z-index: 29; pointer-events: none; overflow: hidden; }
+.moneta-cade {
+  position: absolute; top: -40px; width: var(--taglia); height: var(--taglia); border-radius: 50%;
+  display: grid; place-items: center; font-size: calc(var(--taglia) * .55); color: #7a5300;
+  background: radial-gradient(circle at 35% 30%, #fff3b0, #f2c94c 45%, #c58f12);
+  box-shadow: inset 0 0 0 2px #e0b23a, 0 3px 6px rgb(0 0 0 / .35);
+  animation: moneta-cade var(--durata) cubic-bezier(.35, .1, .7, 1) var(--ritardo) both;
+}
+@keyframes moneta-cade {
+  0% { transform: translateY(0) rotateY(0) rotate(0); opacity: 1; }
+  85% { opacity: 1; }
+  100% { transform: translateY(calc(100dvh + 80px)) rotateY(720deg) rotate(var(--giro)); opacity: 0; }
+}
+
+/* Annuncio d'oro più ricco: un lampo che lo attraversa. */
+.annuncio.oro, .annuncio.nove { overflow: hidden; }
+.annuncio.oro::after, .annuncio.nove::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / .75) 50%, transparent 70%);
+  transform: translateX(-120%); animation: lampo 1s ease .35s both;
+}
+@keyframes lampo { to { transform: translateX(120%); } }
+
+/* 9½: annuncio speciale, notte e oro con il numero grande. */
+.annuncio.nove {
+  background: radial-gradient(ellipse at 50% 0%, #2c4485, #0d1630 80%); color: #f0cf7a;
+  border: 2px solid #d6af55; box-shadow: 0 0 0 4px rgb(214 175 85 / .25), 0 0 40px rgb(240 207 122 / .55), 0 18px 50px rgb(0 0 0 / .45);
+}
+.annuncio.nove strong { font-size: 2rem; text-shadow: 0 0 14px rgb(240 207 122 / .8); }
+.annuncio.nove span { color: #fff3d0; }
+
+/* Sballato: lo schermo trema e si crepa. */
+.annuncio.rosso { box-shadow: 0 0 0 3px rgb(255 255 255 / .15), 0 0 30px rgb(220 60 50 / .55), 0 18px 50px rgb(0 0 0 / .45); }
+body.scossa .gioco { animation: scossa .45s linear; }
+@keyframes scossa { 0%, 100% { translate: 0 0; } 15% { translate: -8px 2px; } 30% { translate: 7px -3px; } 45% { translate: -6px 3px; } 60% { translate: 5px -2px; } 80% { translate: -2px 1px; } }
+.crepa-schermo { position: fixed; inset: 0; z-index: 28; pointer-events: none; animation: crepa-svanisce 1.7s ease both; }
+.crepa-schermo svg { width: 100%; height: 100%; }
+.crepa-schermo path { fill: none; stroke: rgb(255 120 110 / .85); vector-effect: non-scaling-stroke; stroke-width: 3; stroke-linejoin: bevel;
+  filter: drop-shadow(0 0 4px rgb(255 60 50 / .9)); stroke-dasharray: 400; stroke-dashoffset: 400; animation: crepa-disegna .25s ease-out forwards; }
+@keyframes crepa-disegna { to { stroke-dashoffset: 0; } }
+@keyframes crepa-svanisce { 0%, 60% { opacity: 1; } 100% { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .pioggia-monete, .crepa-schermo { display: none; }
+}
