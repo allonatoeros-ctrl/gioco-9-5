@@ -7,14 +7,16 @@ import './tavolo.css';
 import { Carta, eNumerica, nomeCarta } from '../engine';
 import type { AzionePermessa, Evento } from '../engine';
 import type { VistaPartita, GiocatoreVista } from '../server/vista';
-import { illustrazione } from '../ui/illustrazioni';
+import { illustrazione, preparaIllustrazioni } from '../ui/illustrazioni';
 import { ClienteOnline, ErroreOnline, RichiestaMossa, Situazione } from './cliente';
 import { ClienteComputer, CODICE_COMPUTER } from './cliente-computer';
 import { registraServiceWorker } from '../app/installa';
 import { apriGuida } from './guida';
+import { crepa, faccia, pioggiaDiMonete } from './festa';
 import { calcolaDaBattere, cartaParlante, consiglia, lancioMoneta, moneta, sfera, targhettaDaBattere } from './vivo';
 
 registraServiceWorker();
+preparaIllustrazioni();
 
 const app = document.getElementById('app')!;
 // Con `npm run avvia` e ?finto nell'indirizzo si usa un server finto nel browser (solo per provare).
@@ -95,7 +97,9 @@ let ultimoEventoVisto: string | null = null;
 /** Le carte mostrate l'ultima volta, per animare solo quelle nuove o appena girate. */
 let cartePrima: { mano: number; giocatori: string[][] } | null = null;
 let turnoPrima: number | null = null;
-const annunci: { testo: string; tono: string; sotto?: string; chi?: string }[] = [];
+const annunci: { testo: string; tono: string; sotto?: string; chi?: string; festa?: 'monete' | 'crepa' }[] = [];
+/** I 9½ già festeggiati ("mano|giocatore"), per non annunciarli due volte. */
+const noveEMezzoVisti = new Set<string>();
 let annuncioInCorso = false;
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, classe?: string, testo?: string): HTMLElementTagNameMap[K] {
@@ -124,7 +128,7 @@ function linkStanza(c: string) {
 
 const COLORI_POSTO = ['#d9822b', '#3b82c4', '#c0477a', '#4c9a5b', '#8a5cc2', '#c9a227'];
 function avatar(nome: string, posto: number, classe = '') {
-  const a = el('span', `avatar ${classe}`.trim(), (nome.trim()[0] ?? '?').toUpperCase());
+  const a = el('span', `avatar con-faccia ${classe}`.trim(), faccia(nome));
   a.style.setProperty('--colore', COLORI_POSTO[posto % COLORI_POSTO.length]);
   a.setAttribute('aria-hidden', 'true');
   return a;
@@ -1032,6 +1036,7 @@ function raccogliAnnunci(v: VistaPartita, io: number | null) {
   if (ultimoEventoVisto === null) {
     // Prima volta (anche dopo un ricaricamento): niente annunci del passato.
     ultimoEventoVisto = ultimaChiave;
+    cercaNoveEMezzo(v, io, false);
     return;
   }
   let da = reg.length;
@@ -1047,14 +1052,14 @@ function raccogliAnnunci(v: VistaPartita, io: number | null) {
         annunci.push({ testo: `Mano ${e.mano}`, tono: 'neutro', sotto: v.ultimaMano ? 'È l\'ultima mano!' : undefined });
         break;
       case 'sballo':
-        if (/sballa con/.test(e.testo)) annunci.push({ testo: e.giocatore === io ? 'Hai sballato!' : `${nome(e.giocatore)} sballa!`, tono: 'rosso', sotto: e.testo.match(/con ([\d,]+)/)?.[0] });
+        if (/sballa con/.test(e.testo)) annunci.push({ testo: e.giocatore === io ? 'Hai sballato!' : `${nome(e.giocatore)} sballa!`, tono: 'rosso', sotto: e.testo.match(/con ([\d,]+)/)?.[0], festa: e.giocatore === io ? 'crepa' : undefined });
         break;
       case 'tagliatette':
         annunci.push({ testo: '✂ Tagliatette!', tono: 'caldo', sotto: e.testo.match(/punteggio .*?→ [\d,]+/)?.[0] });
         break;
       case 'fineMano':
         if (e.giocatore === undefined) annunci.push({ testo: 'Tutti sballati!', tono: 'rosso', sotto: 'Nessuno vince la mano' });
-        else annunci.push({ testo: e.giocatore === io ? 'Hai vinto la mano! 🎉' : `${nome(e.giocatore)} vince la mano!`, tono: 'oro' });
+        else annunci.push({ testo: e.giocatore === io ? 'Hai vinto la mano! 🎉' : `${nome(e.giocatore)} vince la mano!`, tono: 'oro', festa: e.giocatore === io ? 'monete' : undefined });
         break;
       case 'segnalino':
         if (e.giocatore !== undefined) annunci.push({ testo: '★ Segnalino!', tono: 'oro', sotto: `${nome(e.giocatore)}: ${v.giocatori[e.giocatore].segnalini.length} in tutto` });
@@ -1075,7 +1080,19 @@ function raccogliAnnunci(v: VistaPartita, io: number | null) {
         break;
     }
   }
+  cercaNoveEMezzo(v, io, true);
   if (annunci.length > 4) annunci.splice(0, annunci.length - 4);
+}
+
+/** Chi arriva a 9½ esatti con le carte girate si merita un annuncio tutto suo. */
+function cercaNoveEMezzo(v: VistaPartita, io: number | null, annuncia: boolean) {
+  v.giocatori.forEach((g, i) => {
+    if (g.punteggio !== 9.5 || g.esito === 'sballato' || !haNumeriche(g)) return;
+    const chiave = `${v.numeroMano}|${i}`;
+    if (noveEMezzoVisti.has(chiave)) return;
+    noveEMezzoVisti.add(chiave);
+    if (annuncia) annunci.push({ testo: '9½!', tono: 'nove', sotto: i === io ? 'Nove e mezzo!' : `${g.nome} fa nove e mezzo!`, festa: i === io ? 'monete' : undefined });
+  });
 }
 
 function mostraAnnunci() {
@@ -1099,7 +1116,9 @@ function mostraAnnunci() {
   box.append(el('strong', undefined, a.testo));
   if (a.sotto) box.append(el('span', undefined, a.sotto));
   document.body.append(box);
-  if (a.tono === 'oro') vibra([40, 60, 40]);
+  if (a.tono === 'oro' || a.tono === 'nove') vibra([40, 60, 40]);
+  if (a.festa === 'monete') pioggiaDiMonete();
+  if (a.festa === 'crepa') { crepa(); vibra([60, 30, 120]); }
   setTimeout(() => {
     box.classList.add('via');
     setTimeout(() => {

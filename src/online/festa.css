@@ -1,0 +1,94 @@
+/* ---------- grafica notte e oro: carte, dorso, facce, momenti grandi ---------- */
+
+/* Carte illustrate: angoli blu notte come la nuova cornice. */
+.carta.illustrata { background: #0f1a36; }
+
+/* Dorso disegnato: blu notte, puntini d'oro, cornice doppia e medaglione 9½. */
+.carta.coperta {
+  /* Un'unica immagine già pronta (sfumatura, puntini e cornice insieme): il telefono
+     la disegna una volta e poi la riusa, anche mentre la carta pulsa e dondola. */
+  border: none;
+  background: #0d1630 url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 140' preserveAspectRatio='none'><defs><radialGradient id='s' cx='50%25' cy='45%25' r='75%25'><stop offset='0' stop-color='%23263a75'/><stop offset='1' stop-color='%230d1630'/></radialGradient><pattern id='p' width='10' height='10' patternUnits='userSpaceOnUse'><circle cx='5' cy='5' r='3.6' fill='none' stroke='%23d6af55' stroke-opacity='.35' stroke-width='.5'/><circle cx='5' cy='5' r='1' fill='%23d6af55' fill-opacity='.55'/></pattern></defs><rect width='100' height='140' fill='url(%23s)'/><rect width='100' height='140' fill='url(%23p)'/><rect x='5' y='5' width='90' height='130' rx='7' fill='none' stroke='%23d6af55' stroke-width='1.8'/><rect x='8.5' y='8.5' width='83' height='123' rx='5' fill='none' stroke='%23d6af55' stroke-width='.6'/><path d='M50 36 l3 4 -3 4 -3 -4z M50 96 l3 4 -3 4 -3 -4z' fill='%23d6af55'/></svg>") center / 100% 100% no-repeat;
+}
+.carta.coperta .dorso-logo {
+  width: 52%; color: #f0cf7a; background: #0d1630; border: 2px solid #d6af55;
+  box-shadow: 0 0 0 3px #0d1630, 0 0 0 4px rgb(214 175 85 / .6);
+  font-size: calc(var(--w) * .2);
+}
+.carta.mini.coperta { background: #1a2a5a; box-shadow: inset 0 0 0 1.5px #d6af55; }
+.carta.mini.coperta .dorso-logo { box-shadow: none; border: none; background: none; width: auto; font-size: 9px; }
+.carta-parlante .faccia { background: #1a2a5a; border: 2px solid #d6af55; }
+
+/* Facce al posto delle iniziali. */
+.avatar.con-faccia { font-size: 1.3em; text-shadow: none; line-height: 1; }
+.avversario .avatar.con-faccia { font-size: 1rem; }
+.riflettore .chi .avatar.con-faccia { font-size: .95rem; }
+
+/* Pioggia di monete. */
+.pioggia-monete { position: fixed; inset: 0; z-index: 29; pointer-events: none; overflow: hidden; }
+.moneta-cade {
+  position: absolute; top: -40px; width: var(--taglia); height: var(--taglia); border-radius: 50%;
+  /* Moneta già disegnata in un'immagine sola: si muove senza essere ridisegnata. */
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'><defs><radialGradient id='o' cx='35%25' cy='30%25' r='75%25'><stop offset='0' stop-color='%23fff3b0'/><stop offset='.45' stop-color='%23f2c94c'/><stop offset='1' stop-color='%23c58f12'/></radialGradient></defs><circle cx='20' cy='20' r='19' fill='url(%23o)' stroke='%23e0b23a' stroke-width='2'/><path d='M20 9 l3.2 7 7.6 .8 -5.7 5.1 1.6 7.5 -6.7 -3.9 -6.7 3.9 1.6 -7.5 -5.7 -5.1 7.6 -.8z' fill='%237a5300' fill-opacity='.75'/></svg>") center / 100% 100% no-repeat;
+  will-change: transform, opacity;
+  animation: moneta-cade var(--durata) cubic-bezier(.35, .1, .7, 1) var(--ritardo) both;
+}
+@keyframes moneta-cade {
+  0% { transform: translateY(0) rotateY(0) rotate(0); opacity: 1; }
+  85% { opacity: 1; }
+  100% { transform: translateY(calc(100dvh + 80px)) rotateY(720deg) rotate(var(--giro)); opacity: 0; }
+}
+
+/* Annuncio d'oro più ricco: un lampo che lo attraversa. */
+.annuncio.oro, .annuncio.nove { overflow: hidden; }
+.annuncio.oro::after, .annuncio.nove::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / .75) 50%, transparent 70%);
+  transform: translateX(-120%); animation: lampo 1s ease .35s both;
+}
+@keyframes lampo { to { transform: translateX(120%); } }
+
+/* 9½: annuncio speciale, notte e oro con il numero grande. */
+.annuncio.nove {
+  background: radial-gradient(ellipse at 50% 0%, #2c4485, #0d1630 80%); color: #f0cf7a;
+  border: 2px solid #d6af55; box-shadow: 0 0 0 4px rgb(214 175 85 / .25), 0 0 40px rgb(240 207 122 / .55), 0 18px 50px rgb(0 0 0 / .45);
+}
+.annuncio.nove strong { font-size: 2rem; text-shadow: 0 0 14px rgb(240 207 122 / .8); }
+.annuncio.nove span { color: #fff3d0; }
+
+/* Sballato: lo schermo trema e si crepa. */
+.annuncio.rosso { box-shadow: 0 0 0 3px rgb(255 255 255 / .15), 0 0 30px rgb(220 60 50 / .55), 0 18px 50px rgb(0 0 0 / .45); }
+body.scossa .gioco { animation: scossa .45s linear; will-change: translate; }
+@keyframes scossa { 0%, 100% { translate: 0 0; } 15% { translate: -8px 2px; } 30% { translate: 7px -3px; } 45% { translate: -6px 3px; } 60% { translate: 5px -2px; } 80% { translate: -2px 1px; } }
+.crepa-schermo { position: fixed; inset: 0; z-index: 28; pointer-events: none; animation: crepa-svanisce 1.7s ease both; }
+.crepa-schermo svg { width: 100%; height: 100%; }
+.crepa-schermo path { fill: none; stroke: rgb(255 120 110 / .85); vector-effect: non-scaling-stroke; stroke-width: 3; stroke-linejoin: bevel;
+  stroke-dasharray: 400; stroke-dashoffset: 400; animation: crepa-disegna .25s ease-out forwards; }
+@keyframes crepa-disegna { to { stroke-dashoffset: 0; } }
+@keyframes crepa-svanisce { 0%, 60% { opacity: 1; } 100% { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .pioggia-monete, .crepa-schermo { display: none; }
+}
+
+/* ---------- fluidità sui telefoni ----------
+   Le animazioni che non si fermano mai muovono solo posizione, rotazione,
+   grandezza e trasparenza: il telefono le fa senza ridisegnare niente.
+   Prima alcune facevano "pulsare" ombre e aloni, che vanno ridisegnati a ogni
+   fotogramma (fino a 60 volte al secondo per ogni carta o sfera). */
+
+/* Carte da girare o da scegliere: alone d'oro fisso, si muovono soltanto. */
+.carta.da-girare { box-shadow: 0 0 0 3px var(--oro), 0 0 16px 4px rgb(240 207 122 / .55); animation: dondola 2.4s ease-in-out infinite; will-change: transform; }
+.carta.sceglibile { box-shadow: 0 0 0 3px var(--oro), 0 0 16px 4px rgb(240 207 122 / .55); animation: invito 1.4s ease-in-out infinite; will-change: transform; }
+.mio-turno .carte-mie .carta, .carta-parlante .faccia { will-change: transform; }
+
+/* Sfere: l'alone è un livello a parte che si accende e si spegne. */
+.sfera.calda .globo { animation: none; }
+.sfera.perfetta { animation: none; }
+.sfera.calda::after, .sfera.perfetta::after {
+  content: ''; position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+  box-shadow: 0 0 16px 5px rgb(255 140 60 / .6); opacity: 0; will-change: opacity;
+  animation: alone 1.6s ease-in-out infinite;
+}
+.sfera.perfetta::after { box-shadow: 0 0 18px 7px var(--oro); animation-duration: 1.2s; }
+@keyframes alone { 50% { opacity: 1; } }
