@@ -19,25 +19,50 @@ export function impostaSuoni(accesi: boolean) {
   if (accesi) prepara();
 }
 
-/** Crea l'audio al primo tocco dello schermo (prima i telefoni non lo permettono). */
+/** Crea (o risveglia) l'audio a un tocco dello schermo: prima i telefoni non lo permettono. */
 function prepara() {
-  if (contesto) { if (contesto.state === 'suspended') void contesto.resume(); return; }
+  // iPhone: senza questo, con l'interruttore "silenzioso" attivo i suoni del gioco restano muti.
+  try {
+    const sessione = (navigator as unknown as { audioSession?: { type: string } }).audioSession;
+    if (sessione && sessione.type !== 'playback') sessione.type = 'playback';
+  } catch { /* non tutti i browser */ }
+  if (contesto) {
+    if (contesto.state !== 'running') { void contesto.resume().catch(() => {}); sblocca(); }
+    return;
+  }
   const C = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
   if (!C) return;
   contesto = new C();
   uscita = contesto.createGain();
-  uscita.gain.value = 0.35;
+  uscita.gain.value = 0.7;
   uscita.connect(contesto.destination);
   // Mezzo secondo di fruscio, riusato per carta e crepa.
   rumore = contesto.createBuffer(1, Math.floor(contesto.sampleRate * 0.5), contesto.sampleRate);
   const d = rumore.getChannelData(0);
   for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  void contesto.resume().catch(() => {});
+  sblocca();
+}
+
+/** iPhone e alcuni Android sbloccano l'audio solo se dentro il tocco parte davvero un suono: uno muto basta. */
+function sblocca() {
+  if (!contesto) return;
+  try {
+    const muto = contesto.createBufferSource();
+    muto.buffer = contesto.createBuffer(1, 1, contesto.sampleRate);
+    muto.connect(contesto.destination);
+    muto.start(0);
+  } catch { /* niente */ }
 }
 
 if (typeof window !== 'undefined') {
   const primoTocco = () => { if (suoniAccesi()) prepara(); };
-  window.addEventListener('pointerdown', primoTocco, { passive: true });
-  window.addEventListener('keydown', primoTocco);
+  // Sull'iPhone il tocco "vale" per l'audio solo quando il dito si alza (touchend/click), non quando si appoggia.
+  for (const evento of ['pointerdown', 'touchend', 'click', 'keydown']) {
+    window.addEventListener(evento, primoTocco, { passive: true, capture: true });
+  }
+  // Tornando nel gioco da un'altra app, l'audio va risvegliato al tocco successivo.
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && contesto) void contesto.resume().catch(() => {}); });
 }
 
 function tono(freq: number, inizio: number, durata: number, volume: number, forma: OscillatorType = 'sine') {
@@ -67,7 +92,8 @@ function tin(t: number, volume = 0.5) {
 }
 
 export function suona(s: Suono) {
-  if (!suoniAccesi() || !contesto || !uscita || contesto.state !== 'running') return;
+  if (!suoniAccesi() || !contesto || !uscita) return;
+  if (contesto.state !== 'running') { void contesto.resume().catch(() => {}); return; }
   const ora = performance.now();
   if (ora - (ultimaVolta.get(s) ?? 0) < 80) return; // niente raffiche dello stesso suono
   ultimaVolta.set(s, ora);
