@@ -8,7 +8,7 @@
 .sfera.piccola { --d: 36px; }
 .sfera.tranquilla { --anello: var(--ok); }
 .sfera.calda { --anello: #ff9d4d; }
-.sfera.perfetta { --anello: var(--oro); animation: brilla 1.2s ease-in-out infinite; }
+.sfera.perfetta { --anello: var(--oro); }
 .sfera.sballata { --anello: var(--rosso); --livello: 1; }
 .sfera.limbo { --anello: transparent; }
 .sfera .globo {
@@ -41,13 +41,9 @@
 .sfera .crepa { position: absolute; inset: 0; z-index: 3; pointer-events: none;
   background: linear-gradient(115deg, transparent 46%, #2a0c04 47% 49%, transparent 50%), linear-gradient(60deg, transparent 52%, #2a0c04 53% 54.5%, transparent 55.5%);
 }
-.sfera.calda .globo { animation: pulsa-sfera 1.6s ease-in-out infinite; }
-@keyframes pulsa-sfera { 0%, 100% { box-shadow: inset 0 -4px 8px rgb(90 30 0 / .45), 0 0 0 0 rgb(255 140 60 / .0); } 50% { box-shadow: inset 0 -4px 8px rgb(90 30 0 / .45), 0 0 16px 4px rgb(255 140 60 / .55); } }
-@keyframes brilla { 0%, 100% { filter: drop-shadow(0 0 4px var(--oro)); } 50% { filter: drop-shadow(0 0 14px var(--oro)); } }
 [data-stile="fumetto"] .sfera .globo { box-shadow: 0 0 0 2px #2a1d14, 2px 2px 0 2px #2a1d14; }
 
 /* la sfera al posto della barra */
-.misuratore .sfera + .etichetta-punti { display: none; }
 .misuratore.con-sfera { gap: 10px; min-height: 0; align-items: center; }
 .misuratore.con-sfera .su { font-size: .8rem; color: var(--muto); line-height: 1.1; }
 .misuratore.con-sfera .su strong { display: block; font-family: Georgia, serif; font-size: 1rem; color: var(--testo); }
@@ -72,7 +68,7 @@
 [data-stile="fumetto"] .da-battere strong { color: #b3401d; }
 
 /* ---------- toccare la carta coperta per girarla ---------- */
-.carta.da-girare { cursor: pointer; animation: pulsa-oro 1.2s ease-in-out infinite, dondola 2.4s ease-in-out infinite; }
+.carta.da-girare { cursor: pointer; }
 .carta.da-girare::after { content: '👆 tocca'; position: absolute; left: 50%; bottom: 8%; transform: translateX(-50%);
   background: rgb(0 0 0 / .65); color: #fff; font-size: max(10px, calc(var(--w) * .12)); font-weight: 800; padding: 2px 7px; border-radius: 999px; white-space: nowrap; }
 .carta.da-girare:active { transform: scale(.94); }
@@ -93,7 +89,7 @@
 .carta-parlante { display: flex; align-items: center; gap: 10px; margin-top: 6px; animation: compare .3s ease both; }
 .carta-parlante .faccia {
   --w: 46px; position: relative; flex: none; width: var(--w); aspect-ratio: 5 / 7; border-radius: 6px;
-  background: repeating-linear-gradient(45deg, var(--dorso1) 0 5px, var(--dorso2) 5px 10px); border: 3px solid #fffdf5;
+  background: #1a2a5a; border: 2px solid #d6af55;
   box-shadow: var(--ombra-carta), 0 0 18px rgb(255 190 90 / .35);
   transform-origin: 50% 100%;
 }
@@ -127,7 +123,7 @@
 .carta-parlante.lascia .fumetto { background: #ffd9d4; }
 .carta-parlante.lascia .fumetto::before { border-right-color: #ffd9d4; }
 @keyframes battito { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
-@keyframes parla { 50% { height: 2px; } }
+@keyframes parla { 50% { scale: 1 .35; } }
 @keyframes suda { from { transform: translateY(0); opacity: 1; } to { transform: translateY(14px); opacity: 0; } }
 @keyframes spingi { 0%, 100% { transform: rotate(0); } 40% { transform: rotate(8deg) translateX(3px); } 60% { transform: rotate(6deg) translateX(3px); } }
 @keyframes dubbio { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }

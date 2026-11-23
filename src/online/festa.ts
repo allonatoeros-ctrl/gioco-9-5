@@ -41,8 +41,12 @@ export function pioggiaDiMonete(quante = 16) {
     m.style.left = `${Math.random() * 100}%`;
     m.style.setProperty('--ritardo', `${Math.random() * 0.6}s`);
     m.style.setProperty('--durata', `${1.4 + Math.random() * 0.9}s`);
-    m.style.setProperty('--giro', `${(Math.random() < 0.5 ? -1 : 1) * (360 + Math.random() * 540)}deg`);
-    m.style.setProperty('--taglia', `${18 + Math.random() * 16}px`);
+    m.style.setProperty('--taglia', `${20 + Math.round(Math.random() * 14)}px`);
+    const giro = k % 3;
+    if (giro) m.classList.add(giro === 1 ? 'giro-a' : 'giro-b');
+    const faccia = document.createElement('i');
+    faccia.style.animationDelay = `${-Math.random() * 0.5}s`;
+    m.append(faccia);
     cielo.append(m);
   }
   document.body.append(cielo);
